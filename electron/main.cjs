@@ -2,10 +2,13 @@ const {app, BrowserWindow, ipcMain, shell} = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
+const {execFileSync} = require('node:child_process');
 const yaml = require('js-yaml');
 
 const DEV_SERVER_URL = 'http://localhost:1420';
 const SESSION_ROOT = path.join(os.homedir(), '.copilot', 'session-state');
+const PREFERENCES_PATH = path.join(app.getPath('userData'), 'preferences.json');
+const DEFAULT_TERMINAL = 'iterm';
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -34,6 +37,9 @@ function createWindow() {
 app.whenReady().then(() => {
   ipcMain.handle('sessions:list', async () => listSessions());
   ipcMain.handle('shell:openPath', async (_event, targetPath) => shell.openPath(targetPath));
+  ipcMain.handle('sessions:resume', async (_event, payload) => resumeSession(payload));
+  ipcMain.handle('preferences:getTerminal', async () => getPreferredTerminal());
+  ipcMain.handle('preferences:setTerminal', async (_event, terminal) => setPreferredTerminal(terminal));
 
   createWindow();
 
@@ -218,4 +224,92 @@ function firstMessageDate(messages) {
 
 function lastMessageDate(messages) {
   return messages[messages.length - 1]?.createdAt || '';
+}
+
+function resumeSession(payload) {
+  const sessionId = typeof payload?.sessionId === 'string' ? payload.sessionId : '';
+  const preferredTerminal = normalizeTerminal(payload?.terminal) || getPreferredTerminal();
+
+  if (!sessionId) {
+    throw new Error('A session id is required to resume a Copilot session.');
+  }
+
+  assertCopilotAvailable();
+
+  if (preferredTerminal === 'terminal') {
+    openInTerminal(sessionId);
+  } else {
+    openInITerm(sessionId);
+  }
+
+  return {ok: true};
+}
+
+function openInTerminal(sessionId) {
+  const shellCommand = `copilot --resume ${shellEscape(sessionId)}`;
+  execFileSync('osascript', ['-e', `tell application "Terminal" to do script ${appleScriptString(shellCommand)}`]);
+  execFileSync('osascript', ['-e', 'tell application "Terminal" to activate']);
+}
+
+function openInITerm(sessionId) {
+  const shellCommand = `copilot --resume ${shellEscape(sessionId)}`;
+  const script = [
+    'tell application "iTerm"',
+    'activate',
+    'create window with default profile',
+    `tell current session of current window to write text ${appleScriptString(shellCommand)}`,
+    'end tell',
+  ].join('\n');
+
+  try {
+    execFileSync('osascript', ['-e', script]);
+  } catch {
+    const error = new Error('iTerm could not be opened. Make sure iTerm is installed or switch the selector back to Terminal.');
+    error.code = 'ITERM_UNAVAILABLE';
+    throw error;
+  }
+}
+
+function assertCopilotAvailable() {
+  try {
+    execFileSync('bash', ['-lc', 'command -v copilot'], {stdio: 'ignore'});
+  } catch {
+    const error = new Error('GitHub Copilot CLI was not found in your shell PATH. Install it or make sure the `copilot` command is available, then try again.');
+    error.code = 'COPILOT_NOT_FOUND';
+    throw error;
+  }
+}
+
+function getPreferredTerminal() {
+  const preferences = readPreferences();
+  return normalizeTerminal(preferences.terminal) || DEFAULT_TERMINAL;
+}
+
+function setPreferredTerminal(terminal) {
+  const value = normalizeTerminal(terminal) || DEFAULT_TERMINAL;
+  const preferences = readPreferences();
+  preferences.terminal = value;
+  fs.mkdirSync(path.dirname(PREFERENCES_PATH), {recursive: true});
+  fs.writeFileSync(PREFERENCES_PATH, JSON.stringify(preferences, null, 2));
+  return value;
+}
+
+function readPreferences() {
+  try {
+    return JSON.parse(fs.readFileSync(PREFERENCES_PATH, 'utf8')) || {};
+  } catch {
+    return {};
+  }
+}
+
+function normalizeTerminal(value) {
+  return value === 'terminal' ? 'terminal' : value === 'iterm' ? 'iterm' : null;
+}
+
+function shellEscape(value) {
+  return `'${String(value).replace(/'/g, `'"'"'`)}'`;
+}
+
+function appleScriptString(value) {
+  return `"${String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 }

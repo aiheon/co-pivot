@@ -1,18 +1,12 @@
-import {useMemo, useState} from 'react';
 import {
   Badge,
   Box,
   Card,
-  Combobox,
   Group,
-  Pill,
-  PillsInput,
   ScrollArea,
   Stack,
   Text,
-  useCombobox,
 } from '@mantine/core';
-import {IconSearch} from '@tabler/icons-react';
 import type {SessionSummary} from '@/features/sessions/types/session';
 
 interface SessionListPaneProps {
@@ -28,82 +22,14 @@ export function SessionListPane({
   splitView,
   onSelectSession,
 }: SessionListPaneProps) {
-  const [query, setQuery] = useState('');
-  const combobox = useCombobox();
-
-  const filteredSessions = useMemo(() => {
-    const value = query.trim().toLowerCase();
-
-    if (!value) {
-      return sessions;
-    }
-
-    return sessions.filter((session) => {
-      return [
-        session.title,
-        session.workspaceLabel,
-        session.workspacePath,
-        session.id,
-        session.lastSnippet,
-        ...session.tags,
-      ]
-        .join(' ')
-        .toLowerCase()
-        .includes(value);
-    });
-  }, [query, sessions]);
-
   return (
     <Stack gap="md" h="100%">
       <Box>
         <Text fw={600}>Sessions</Text>
         <Text size="sm" c="dimmed">
-          Search, pin mentally, and jump between conversations fast.
+          Jump between conversations and keep context close at hand.
         </Text>
       </Box>
-
-      <Combobox
-        store={combobox}
-        onOptionSubmit={(value) => {
-          onSelectSession(value);
-          combobox.closeDropdown();
-        }}
-      >
-        <Combobox.Target>
-          <PillsInput onClick={() => combobox.openDropdown()}>
-            <Pill.Group>
-              <Pill withRemoveButton={false}>
-                <IconSearch size={14} />
-              </Pill>
-              <PillsInput.Field
-                value={query}
-                placeholder="Search title, path, tag, or session id"
-                onFocus={() => combobox.openDropdown()}
-                onBlur={() => combobox.closeDropdown()}
-                onChange={(event) => {
-                  setQuery(event.currentTarget.value);
-                  combobox.updateSelectedOptionIndex();
-                }}
-              />
-            </Pill.Group>
-          </PillsInput>
-        </Combobox.Target>
-
-        <Combobox.Dropdown>
-          <Combobox.Options mah={240}>
-            {filteredSessions.map((session) => (
-              <Combobox.Option key={session.id} value={session.id}>
-                <Text fw={600} size="sm">
-                  {session.title}
-                </Text>
-                <Text size="xs" c="dimmed" truncate>
-                  {session.workspacePath}
-                </Text>
-              </Combobox.Option>
-            ))}
-          </Combobox.Options>
-        </Combobox.Dropdown>
-      </Combobox>
 
       <Group gap="xs">
         <Badge variant="light" color="cyan">
@@ -116,7 +42,7 @@ export function SessionListPane({
 
       <ScrollArea type="never" offsetScrollbars scrollbarSize={6} flex={1}>
         <Stack gap="sm">
-          {filteredSessions.map((session) => {
+          {sessions.map((session) => {
             const isActive = activeIds.includes(session.id);
 
             return (

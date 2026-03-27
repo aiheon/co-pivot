@@ -1,4 +1,4 @@
-import {useMemo, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {
   ActionIcon,
   AppShell,
@@ -8,6 +8,7 @@ import {
   Button,
   Divider,
   Group,
+  SegmentedControl,
   Stack,
   Text,
   Tooltip,
@@ -21,6 +22,11 @@ import {
 } from '@tabler/icons-react';
 import {SessionListPane} from '@/features/sessions/components/SessionListPane';
 import {SessionSplitView} from '@/features/sessions/components/SessionSplitView';
+import {
+  getPreferredTerminal,
+  setPreferredTerminal,
+  type PreferredTerminal,
+} from '@/features/sessions/lib/sessionSource';
 import {useSessionWorkspace} from '@/features/sessions/lib/useSessionWorkspace';
 import type {SessionSummary} from '@/features/sessions/types/session';
 
@@ -35,12 +41,23 @@ export default function App() {
     setActiveIds,
   } = useSessionWorkspace();
   const [splitView, setSplitView] = useState(true);
+  const [preferredTerminal, setPreferredTerminalState] = useState<PreferredTerminal>('iterm');
+
+  useEffect(() => {
+    void getPreferredTerminal().then(setPreferredTerminalState);
+  }, []);
 
   const activeSessions = useMemo(() => {
     return activeIds
       .map((id) => sessions.find((session) => session.id === id))
       .filter((session): session is SessionSummary => Boolean(session));
   }, [activeIds, sessions]);
+
+  const handleTerminalChange = async (value: string | null) => {
+    const terminal = value === 'terminal' ? 'terminal' : 'iterm';
+    const saved = await setPreferredTerminal(terminal);
+    setPreferredTerminalState(saved);
+  };
 
   return (
     <AppShell
@@ -58,6 +75,21 @@ export default function App() {
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
             <Stack gap={2}>
               <Group gap="xs">
+            <SegmentedControl
+              value={preferredTerminal}
+              onChange={(value) => void handleTerminalChange(value)}
+              data={[
+                {label: 'iTerm', value: 'iterm'},
+                {label: 'Terminal', value: 'terminal'},
+              ]}
+              size="xs"
+              radius="md"
+              aria-label="Preferred terminal"
+              styles={{
+                root: {maxWidth: 152, flexShrink: 0},
+                label: {paddingInline: 10, fontSize: 12},
+              }}
+            />
                 <Text fw={700} size="lg">
                   co-pivot
                 </Text>
@@ -132,7 +164,7 @@ export default function App() {
                 </Text>
               </Stack>
               <Badge size="lg" variant="light" color="cyan">
-                Split view ready
+                {preferredTerminal === 'iterm' ? 'iTerm resume' : 'Terminal resume'}
               </Badge>
             </Group>
           </Box>
@@ -140,6 +172,7 @@ export default function App() {
           <Divider />
 
           <SessionSplitView
+            preferredTerminal={preferredTerminal}
             sessions={activeSessions}
             splitView={splitView}
             onSelectSecondary={(id) => setActiveIds((current) => nextSecondaryId(current, id))}

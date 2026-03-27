@@ -1,4 +1,6 @@
+import {useState} from 'react';
 import {
+  Alert,
   Button,
   Card,
   Code,
@@ -9,16 +11,22 @@ import {
   Stack,
   Text,
 } from '@mantine/core';
-import {IconPlayerPlay, IconTerminal2} from '@tabler/icons-react';
+import {IconAlertCircle, IconPlayerPlay, IconTerminal2} from '@tabler/icons-react';
+import {
+  resumeSession,
+  type PreferredTerminal,
+} from '@/features/sessions/lib/sessionSource';
 import type {SessionSummary} from '@/features/sessions/types/session';
 
 interface SessionSplitViewProps {
+  preferredTerminal: PreferredTerminal;
   sessions: SessionSummary[];
   splitView: boolean;
   onSelectSecondary: (id: string) => void;
 }
 
 export function SessionSplitView({
+  preferredTerminal,
   sessions,
   splitView,
   onSelectSecondary,
@@ -33,24 +41,47 @@ export function SessionSplitView({
   }
 
   if (!splitView || sessions.length === 1) {
-    return <SessionPanel session={sessions[0]} />;
+    return <SessionPanel preferredTerminal={preferredTerminal} session={sessions[0]} />;
   }
 
   return (
     <SimpleGrid cols={{base: 1, lg: 2}} spacing="md">
-      <SessionPanel session={sessions[0]} />
-      <SessionPanel session={sessions[1]} onPromote={() => onSelectSecondary(sessions[1].id)} />
+      <SessionPanel preferredTerminal={preferredTerminal} session={sessions[0]} />
+      <SessionPanel
+        preferredTerminal={preferredTerminal}
+        session={sessions[1]}
+        onPromote={() => onSelectSecondary(sessions[1].id)}
+      />
     </SimpleGrid>
   );
 }
 
 function SessionPanel({
+  preferredTerminal,
   session,
   onPromote,
 }: {
+  preferredTerminal: PreferredTerminal;
   session: SessionSummary;
   onPromote?: () => void;
 }) {
+  const [resumeError, setResumeError] = useState<string | null>(null);
+  const [isResuming, setIsResuming] = useState(false);
+
+  const handleResume = async () => {
+    setResumeError(null);
+    setIsResuming(true);
+
+    try {
+      await resumeSession(session.id, preferredTerminal);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to resume this Copilot session.';
+      setResumeError(message);
+    } finally {
+      setIsResuming(false);
+    }
+  };
+
   return (
     <Card withBorder padding="lg" radius="xl" className="session-detail-card">
       <Stack gap="md">
@@ -70,16 +101,28 @@ function SessionPanel({
                 Keep on right
               </Button>
             ) : null}
-            <Button leftSection={<IconPlayerPlay size={14} />} size="xs">
+            <Button
+              leftSection={<IconPlayerPlay size={14} />}
+              size="xs"
+              loading={isResuming}
+              onClick={() => void handleResume()}
+            >
               Resume
             </Button>
           </Group>
         </Group>
 
+        {resumeError ? (
+          <Alert color="red" variant="light" icon={<IconAlertCircle size={16} />}>
+            {resumeError}
+          </Alert>
+        ) : null}
+
         <Group gap="xs">
           <Code>{session.id}</Code>
           {session.branch ? <Code>{session.branch}</Code> : null}
           <Code>{session.status}</Code>
+          <Code>{preferredTerminal === 'iterm' ? 'iTerm' : 'Terminal'}</Code>
         </Group>
 
         <Divider />
