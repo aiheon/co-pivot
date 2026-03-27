@@ -1,0 +1,103 @@
+import type {SessionSummary} from '@/features/sessions/types/session';
+
+export const mockSessions: SessionSummary[] = [
+  {
+    id: 'sess_a1f27',
+    title: 'Refactor billing webhook retries',
+    workspaceLabel: 'commerce-service',
+    workspacePath: '/Users/aiheon/Developper/commerce-service',
+    status: 'active',
+    startedAt: '2026-03-27T08:30:00.000Z',
+    updatedAt: '2026-03-27T12:42:00.000Z',
+    lastSnippet: 'Need to confirm whether duplicate events can arrive after a retry backoff.',
+    messageCount: 24,
+    branch: 'codex/retry-hardening',
+    tags: ['backend', 'payments'],
+    messages: [
+      {
+        id: 'm1',
+        role: 'user',
+        text: 'Investigate webhook retries and reduce duplicate processing.',
+        createdAt: '2026-03-27T08:30:00.000Z',
+      },
+      {
+        id: 'm2',
+        role: 'assistant',
+        text: 'I found the retry logic in BillingWebhookProcessor and a missing idempotency guard.',
+        createdAt: '2026-03-27T08:34:00.000Z',
+      },
+      {
+        id: 'm3',
+        role: 'assistant',
+        text: 'Need to confirm whether duplicate events can arrive after a retry backoff.',
+        createdAt: '2026-03-27T12:42:00.000Z',
+      },
+    ],
+  },
+  {
+    id: 'sess_b83cd',
+    title: 'Design a Copilot session browser MVP',
+    workspaceLabel: 'co-pivot',
+    workspacePath: '/Users/aiheon/Developper/co-pivot',
+    status: 'paused',
+    startedAt: '2026-03-26T15:12:00.000Z',
+    updatedAt: '2026-03-27T11:05:00.000Z',
+    lastSnippet: 'Split view should stay lightweight and default to one active resume target.',
+    messageCount: 31,
+    branch: 'main',
+    tags: ['desktop', 'ux'],
+    messages: [
+      {
+        id: 'm4',
+        role: 'user',
+        text: 'I want a UI that helps me jump between Copilot CLI sessions.',
+        createdAt: '2026-03-26T15:12:00.000Z',
+      },
+      {
+        id: 'm5',
+        role: 'assistant',
+        text: 'A local-first desktop shell with split view looks like the right starting point.',
+        createdAt: '2026-03-26T15:20:00.000Z',
+      },
+      {
+        id: 'm6',
+        role: 'assistant',
+        text: 'Split view should stay lightweight and default to one active resume target.',
+        createdAt: '2026-03-27T11:05:00.000Z',
+      },
+    ],
+  },
+  {
+    id: 'sess_ff901',
+    title: 'Audit test flakiness in admin-ui',
+    workspaceLabel: 'admin-ui',
+    workspacePath: '/Users/aiheon/Developper/admin-ui',
+    status: 'stale',
+    startedAt: '2026-03-25T09:10:00.000Z',
+    updatedAt: '2026-03-25T18:00:00.000Z',
+    lastSnippet: 'Flake clusters around delayed navigation assertions in checkout e2e.',
+    messageCount: 18,
+    branch: 'codex/e2e-audit',
+    tags: ['frontend', 'tests'],
+    messages: [
+      {
+        id: 'm7',
+        role: 'user',
+        text: 'Review the last failing Playwright job and summarize the likely root causes.',
+        createdAt: '2026-03-25T09:10:00.000Z',
+      },
+      {
+        id: 'm8',
+        role: 'assistant',
+        text: 'The logs point to delayed hydration and one selector that resolves before the modal stabilizes.',
+        createdAt: '2026-03-25T10:02:00.000Z',
+      },
+      {
+        id: 'm9',
+        role: 'assistant',
+        text: 'Flake clusters around delayed navigation assertions in checkout e2e.',
+        createdAt: '2026-03-25T18:00:00.000Z',
+      },
+    ],
+  },
+];
