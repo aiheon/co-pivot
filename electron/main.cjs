@@ -45,9 +45,7 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  app.quit();
 });
 
 function listSessions() {
@@ -74,8 +72,8 @@ function parseSessionDir(sessionDir) {
 
   const workspace = readWorkspace(workspacePath);
   const messages = readMessages(path.join(sessionDir, 'events.jsonl'));
-  const updatedAt = workspace.updated_at || lastMessageDate(messages) || '';
-  const startedAt = workspace.created_at || firstMessageDate(messages) || updatedAt;
+  const updatedAt = normalizeTimestamp(workspace.updated_at) || lastMessageDate(messages) || '';
+  const startedAt = normalizeTimestamp(workspace.created_at) || firstMessageDate(messages) || updatedAt;
   const projectPath = workspace.cwd || workspace.git_root || sessionDir;
   const workspaceLabel = path.basename(projectPath);
   const title = deriveTitle(workspace, messages, workspaceLabel);
@@ -149,6 +147,26 @@ function deriveLastSnippet(messages, fallback) {
   }
 
   return truncate(messages[messages.length - 1].text, 140);
+}
+
+function normalizeTimestamp(value) {
+  if (!value) {
+    return '';
+  }
+
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  if (typeof value === 'number') {
+    return new Date(value).toISOString();
+  }
+
+  return '';
 }
 
 function deriveStatus(updatedAt) {
