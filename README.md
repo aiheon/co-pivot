@@ -15,16 +15,16 @@ co-pivot is a local-first desktop app for browsing GitHub Copilot CLI sessions, 
 - Mantine-based app shell with search and session list
 - Free split view for two sessions
 - Session domain model isolated under `src/features/sessions`
-- Mock data fallback so UI work can continue before the local parser is wired
-- Tauri shell scaffolded, but not yet connected to filesystem or CLI actions
+- Real local discovery of Copilot CLI sessions through `~/.copilot/session-state`
+- Mock data fallback so UI work can continue outside Tauri or when no local sessions are found
+- Tauri shell scaffolded and ready for additional actions like resume/open-folder
 
 ## Planned milestones
 
-1. Detect and parse local Copilot CLI session storage
-2. Replace mock data with a filesystem-backed session source
-3. Add resume/open-folder actions through Tauri commands
-4. Add lightweight auto-refresh and better session health states
-5. Add light theme polish and richer comparison workflows
+1. Add resume/open-folder actions through Tauri commands
+2. Add lightweight auto-refresh and better session health states
+3. Improve status derivation and session summaries from richer event metadata
+4. Add light theme polish and richer comparison workflows
 
 ## Local development
 
@@ -54,5 +54,6 @@ bun run tauri dev
 
 ## Notes
 
-- This repository currently uses mock sessions because the local Copilot CLI session format still needs to be mapped on your machine.
+- co-pivot reads Copilot CLI sessions from `~/.copilot/session-state`.
+- In plain web mode, the app falls back to mock sessions because filesystem access goes through Tauri commands.
 - Rust is not installed in the current environment, so the desktop shell cannot be launched from this session yet.
