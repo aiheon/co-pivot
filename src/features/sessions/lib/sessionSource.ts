@@ -1,8 +1,16 @@
 import type {SessionSourceResult, SessionSummary} from '@/features/sessions/types/session';
 import {mockSessions} from './mockSessions';
 
+declare global {
+  interface Window {
+    coPivot?: {
+      listSessions: () => Promise<SessionSummary[]>;
+    };
+  }
+}
+
 export async function loadSessions(): Promise<SessionSourceResult> {
-  if (!isTauriRuntime()) {
+  if (!window.coPivot) {
     return {
       mode: 'mock',
       sessions: mockSessions,
@@ -10,8 +18,7 @@ export async function loadSessions(): Promise<SessionSourceResult> {
   }
 
   try {
-    const {invoke} = await import('@tauri-apps/api/core');
-    const sessions = await invoke<SessionSummary[]>('list_sessions');
+    const sessions = await window.coPivot.listSessions();
 
     return {
       mode: sessions.length > 0 ? 'local' : 'mock',
@@ -23,8 +30,4 @@ export async function loadSessions(): Promise<SessionSourceResult> {
       sessions: mockSessions,
     };
   }
-}
-
-function isTauriRuntime() {
-  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 }

@@ -4,7 +4,7 @@ co-pivot is a local-first desktop app for browsing GitHub Copilot CLI sessions, 
 
 ## Product direction
 
-- Desktop-first with `Tauri + React + Mantine`
+- Desktop-first with `Electron + React + Mantine`
 - Local-only v1 focused on GitHub Copilot CLI
 - Split view supported from the start
 - Dark mode by default, with light mode planned
@@ -16,23 +16,21 @@ co-pivot is a local-first desktop app for browsing GitHub Copilot CLI sessions, 
 - Free split view for two sessions
 - Session domain model isolated under `src/features/sessions`
 - Real local discovery of Copilot CLI sessions through `~/.copilot/session-state`
-- Mock data fallback so UI work can continue outside Tauri or when no local sessions are found
-- Tauri shell scaffolded and ready for additional actions like resume/open-folder
+- Mock data fallback so UI work can continue outside Electron or when no local sessions are found
+- Electron shell with preload bridge, ready for actions like resume and open-folder
 
 ## Planned milestones
 
-1. Add resume/open-folder actions through Tauri commands
+1. Add resume/open-folder actions through Electron IPC
 2. Add lightweight auto-refresh and better session health states
 3. Improve status derivation and session summaries from richer event metadata
-4. Add light theme polish and richer comparison workflows
+4. Add packaging and release flow for macOS
 
 ## Local development
 
 ### Prerequisites
 
 - `bun`
-- Rust toolchain for Tauri (`rustup`, `cargo`, `rustc`)
-- Tauri system prerequisites for macOS
 
 ### Install
 
@@ -40,20 +38,13 @@ co-pivot is a local-first desktop app for browsing GitHub Copilot CLI sessions, 
 bun install
 ```
 
-### Run the web UI
+### Run the desktop app
 
 ```bash
 bun run dev
 ```
 
-### Run the desktop shell
-
-```bash
-bun run tauri dev
-```
-
 ## Notes
 
 - co-pivot reads Copilot CLI sessions from `~/.copilot/session-state`.
-- In plain web mode, the app falls back to mock sessions because filesystem access goes through Tauri commands.
-- Rust is not installed in the current environment, so the desktop shell cannot be launched from this session yet.
+- In plain web mode, the app falls back to mock sessions because filesystem access goes through the Electron preload bridge.
