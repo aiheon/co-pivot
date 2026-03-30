@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {
   Alert,
   Button,
@@ -11,7 +11,7 @@ import {
   Stack,
   Text,
 } from '@mantine/core';
-import {IconAlertCircle, IconPlayerPlay, IconTerminal2, IconX} from '@tabler/icons-react';
+import {IconAlertCircle, IconPlayerPlay, IconX} from '@tabler/icons-react';
 import {
   resumeSession,
   type PreferredTerminal,
@@ -51,7 +51,7 @@ export function SessionSplitView({
   }
 
   return (
-    <SimpleGrid cols={{base: 1, lg: 2}} spacing="md">
+    <SimpleGrid cols={{base: 1, lg: 2}} spacing="md" h="100%">
       <SessionPanel
         preferredTerminal={preferredTerminal}
         session={sessions[0]}
@@ -77,6 +77,16 @@ function SessionPanel({
 }) {
   const [resumeError, setResumeError] = useState<string | null>(null);
   const [isResuming, setIsResuming] = useState(false);
+  const conversationViewportRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const viewport = conversationViewportRef.current;
+    if (!viewport) {
+      return;
+    }
+
+    viewport.scrollTop = viewport.scrollHeight;
+  }, [session.id, session.messages.length]);
 
   const handleResume = async () => {
     setResumeError(null);
@@ -148,39 +158,37 @@ function SessionPanel({
 
         <Divider />
 
-        <Stack gap="xs" style={{flex: 1, minHeight: 0}}>          <Group gap={6}>
-            <IconTerminal2 size={16} />
-            <Text fw={600}>Conversation</Text>
-          </Group>
-
-          <Card withBorder radius="lg" padding="sm" className="terminal-shell" style={{flex: 1, minHeight: 0}}>            <Group justify="space-between" className="terminal-toolbar">
-              <Group gap={8}>
-                <span className="terminal-dot terminal-dot-red" />
-                <span className="terminal-dot terminal-dot-yellow" />
-                <span className="terminal-dot terminal-dot-green" />
-              </Group>
-              <Text size="xs" className="terminal-title">
-                {session.workspaceLabel} :: {session.id.slice(0, 8)}
-              </Text>
-            </Group>
-
-            <ScrollArea h="100%" offsetScrollbars scrollbarSize={6}>
-              <Stack gap={0} className="terminal-log">
-                {[...session.messages].reverse().map((message) => (
-                  <div key={message.id} className="terminal-entry">
-                    <div className="terminal-entry-header">
+        <Stack gap="xs" style={{flex: 1, minHeight: 0}}>
+          <Card withBorder radius="lg" padding="md" className="conversation-shell" style={{flex: 1, minHeight: 0}}>
+            <ScrollArea
+              h="100%"
+              offsetScrollbars
+              scrollbarSize={6}
+              viewportRef={conversationViewportRef}
+            >
+              <Stack gap="sm" className="conversation-log">
+                {session.messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={
+                      message.role === 'user'
+                        ? 'conversation-entry conversation-entry-user'
+                        : 'conversation-entry conversation-entry-assistant'
+                    }
+                  >
+                    <div className="conversation-entry-header">
                       <span
                         className={
                           message.role === 'user'
-                            ? 'terminal-role terminal-role-user'
-                            : 'terminal-role terminal-role-assistant'
+                            ? 'conversation-role conversation-role-user'
+                            : 'conversation-role conversation-role-assistant'
                         }
                       >
-                        {message.role === 'user' ? '>' : '$'} {message.role}
+                        {message.role === 'user' ? 'You' : 'Copilot'}
                       </span>
-                      <span className="terminal-time">{formatTime(message.createdAt)}</span>
+                      <span className="conversation-time">{formatTimestamp(message.createdAt)}</span>
                     </div>
-                    <pre className="terminal-message">{message.text}</pre>
+                    <pre className="conversation-message">{message.text}</pre>
                   </div>
                 ))}
               </Stack>
@@ -231,8 +239,10 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-function formatTime(value: string) {
+function formatTimestamp(value: string) {
   return new Intl.DateTimeFormat('en-CA', {
+    month: 'short',
+    day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
   }).format(new Date(value));

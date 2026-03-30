@@ -5,7 +5,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-body[data-mantine-color-scheme='dark'] {
+:root[data-mantine-color-scheme='dark'] {
   --gb-bg0: #282828;
   --gb-bg1: #3c3836;
   --gb-bg2: #504945;
@@ -24,7 +24,7 @@ body[data-mantine-color-scheme='dark'] {
   --gb-orange: #fe8019;
 }
 
-body[data-mantine-color-scheme='light'] {
+:root[data-mantine-color-scheme='light'] {
   --gb-bg0: #fbf1c7;
   --gb-bg1: #ebdbb2;
   --gb-bg2: #d5c4a1;
@@ -53,14 +53,14 @@ body {
     color 180ms ease;
 }
 
-body[data-mantine-color-scheme='dark'] {
+:root[data-mantine-color-scheme='dark'] {
   color-scheme: dark;
   background:
     radial-gradient(circle at top, rgba(131, 165, 152, 0.18), transparent 32%),
     linear-gradient(180deg, #32302f 0%, #282828 100%);
 }
 
-body[data-mantine-color-scheme='light'] {
+:root[data-mantine-color-scheme='light'] {
   color-scheme: light;
   background:
     radial-gradient(circle at top, rgba(7, 102, 120, 0.14), transparent 30%),
@@ -80,7 +80,7 @@ body[data-mantine-color-scheme='light'] {
     box-shadow 180ms ease;
 }
 
-body[data-mantine-color-scheme='dark'] .hero-panel {
+:root[data-mantine-color-scheme='dark'] .hero-panel {
   border: 1px solid rgba(168, 153, 132, 0.16);
   background:
     linear-gradient(135deg, rgba(60, 56, 54, 0.94), rgba(40, 40, 40, 0.96)),
@@ -90,7 +90,7 @@ body[data-mantine-color-scheme='dark'] .hero-panel {
     0 24px 60px rgba(0, 0, 0, 0.24);
 }
 
-body[data-mantine-color-scheme='light'] .hero-panel {
+:root[data-mantine-color-scheme='light'] .hero-panel {
   border: 1px solid rgba(168, 153, 132, 0.24);
   background:
     linear-gradient(135deg, rgba(249, 245, 215, 0.98), rgba(242, 229, 188, 0.98)),
@@ -106,11 +106,11 @@ body[data-mantine-color-scheme='light'] .hero-panel {
   font-size: 0.75rem;
 }
 
-body[data-mantine-color-scheme='dark'] .eyebrow {
+:root[data-mantine-color-scheme='dark'] .eyebrow {
   color: var(--gb-yellow);
 }
 
-body[data-mantine-color-scheme='light'] .eyebrow {
+:root[data-mantine-color-scheme='light'] .eyebrow {
   color: var(--gb-blue);
 }
 
@@ -132,171 +132,214 @@ body[data-mantine-color-scheme='light'] .eyebrow {
   transform: translateY(-1px);
 }
 
-body[data-mantine-color-scheme='dark'] .session-card:hover {
+:root[data-mantine-color-scheme='dark'] .session-card:hover {
   border-color: rgba(142, 192, 124, 0.35);
 }
 
-body[data-mantine-color-scheme='light'] .session-card:hover {
+:root[data-mantine-color-scheme='light'] .session-card:hover {
   border-color: rgba(66, 123, 88, 0.3);
 }
 
-body[data-mantine-color-scheme='dark'] .session-card.active {
+:root[data-mantine-color-scheme='dark'] .session-card.active {
   background: rgba(80, 73, 69, 0.48);
   border-color: rgba(142, 192, 124, 0.45);
 }
 
-body[data-mantine-color-scheme='light'] .session-card.active {
+:root[data-mantine-color-scheme='light'] .session-card.active {
   background: rgba(213, 196, 161, 0.45);
   border-color: rgba(66, 123, 88, 0.35);
 }
 
 .session-detail-card {
-  min-height: calc(100vh - 232px);
+  height: 100%;
+  min-height: 0;
   transition: background 180ms ease, backdrop-filter 180ms ease;
 }
 
-body[data-mantine-color-scheme='dark'] .session-detail-card {
+:root[data-mantine-color-scheme='dark'] .session-detail-card {
   background: rgba(40, 40, 40, 0.82);
   backdrop-filter: blur(10px);
 }
 
-body[data-mantine-color-scheme='light'] .session-detail-card {
+:root[data-mantine-color-scheme='light'] .session-detail-card {
   background: rgba(251, 241, 199, 0.86);
   backdrop-filter: blur(10px);
 }
 
-.terminal-shell {
+.conversation-shell {
   display: flex;
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
 }
 
-body[data-mantine-color-scheme='dark'] .terminal-shell {
-  border-color: #665c54;
-  background:
-    linear-gradient(180deg, rgba(40, 40, 40, 0.98), rgba(29, 32, 33, 0.98));
+:root[data-mantine-color-scheme='dark'] .conversation-shell {
+  border-color: rgba(168, 153, 132, 0.22);
+  background: linear-gradient(180deg, rgba(40, 40, 40, 0.98), rgba(50, 48, 47, 0.98));
   box-shadow:
-    inset 0 1px 0 rgba(251, 241, 199, 0.06),
-    0 18px 40px rgba(0, 0, 0, 0.28);
+    inset 0 1px 0 rgba(251, 241, 199, 0.04),
+    0 16px 34px rgba(0, 0, 0, 0.22);
 }
 
-body[data-mantine-color-scheme='light'] .terminal-shell {
-  border-color: #d5c4a1;
-  background:
-    linear-gradient(180deg, rgba(251, 241, 199, 0.96), rgba(242, 229, 188, 0.96));
+:root[data-mantine-color-scheme='light'] .conversation-shell {
+  background: linear-gradient(180deg, rgba(251, 241, 199, 0.97), rgba(242, 229, 188, 0.94));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    0 14px 30px rgba(146, 131, 116, 0.18);
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    0 12px 24px rgba(146, 131, 116, 0.16);
 }
 
-.terminal-toolbar {
-  padding: 0.2rem 0.35rem 0.7rem;
+.conversation-toolbar {
+  padding-bottom: 0.8rem;
+  margin-bottom: 0.2rem;
+  border-bottom: 1px solid transparent;
 }
 
-.terminal-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  display: inline-block;
+:root[data-mantine-color-scheme='dark'] .conversation-toolbar {
+  border-bottom-color: rgba(168, 153, 132, 0.14);
 }
 
-.terminal-dot-red {
-  background: #fb4934;
+:root[data-mantine-color-scheme='light'] .conversation-toolbar {
+  border-bottom-color: rgba(124, 111, 100, 0.14);
 }
 
-.terminal-dot-yellow {
-  background: #fabd2f;
+.conversation-title {
+  letter-spacing: 0.01em;
 }
 
-.terminal-dot-green {
-  background: #b8bb26;
+.conversation-log {
+  padding-top: 0.35rem;
+  padding-right: 0.1rem;
 }
 
-.terminal-title {
-  font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
-  letter-spacing: 0.02em;
+.conversation-entry {
+  max-width: 88%;
+  border-radius: 18px;
+  padding: 0.85rem 0.95rem;
+  border: none;
 }
 
-body[data-mantine-color-scheme='dark'] .terminal-title {
-  color: #a89984;
+.conversation-entry-user {
+  margin-left: auto;
+  border-bottom-right-radius: 8px;
 }
 
-body[data-mantine-color-scheme='light'] .terminal-title {
-  color: #7c6f64;
+.conversation-entry-assistant {
+  margin-right: auto;
+  border-bottom-left-radius: 8px;
 }
 
-.terminal-log {
-  font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+:root[data-mantine-color-scheme='dark'] .conversation-entry-user {
+  background: #689d6a;
+  box-shadow: none;
 }
 
-.terminal-entry {
-  padding: 0.65rem 0.4rem 0.8rem;
-  border-top: 1px solid transparent;
+:root[data-mantine-color-scheme='dark'] .conversation-entry-assistant {
+  background: #504945;
+  box-shadow: none;
 }
 
-.terminal-entry:first-child {
-  border-top: none;
+:root[data-mantine-color-scheme='light'] .conversation-entry-user {
+  background: #8ec07c;
+  box-shadow: none;
 }
 
-body[data-mantine-color-scheme='dark'] .terminal-entry {
-  border-top-color: rgba(168, 153, 132, 0.12);
+:root[data-mantine-color-scheme='light'] .conversation-entry-assistant {
+  background: #d5c4a1;
+  box-shadow: none;
 }
 
-body[data-mantine-color-scheme='light'] .terminal-entry {
-  border-top-color: rgba(124, 111, 100, 0.14);
-}
-
-.terminal-entry-header {
+.conversation-entry-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.45rem;
-  font-size: 0.76rem;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
 }
 
-.terminal-role {
-  text-transform: lowercase;
-  letter-spacing: 0.03em;
+.conversation-entry-user .conversation-entry-header {
+  justify-content: flex-end;
 }
 
-body[data-mantine-color-scheme='dark'] .terminal-role-user {
-  color: #83a598;
+.conversation-entry-assistant .conversation-entry-header {
+  justify-content: flex-start;
 }
 
-body[data-mantine-color-scheme='dark'] .terminal-role-assistant {
-  color: #b8bb26;
+.conversation-role {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
-body[data-mantine-color-scheme='light'] .terminal-role-user {
-  color: #076678;
+:root[data-mantine-color-scheme='dark'] .conversation-role-user {
+  background: rgba(235, 251, 247, 0.18);
+  color: #f2fbf8;
 }
 
-body[data-mantine-color-scheme='light'] .terminal-role-assistant {
-  color: #79740e;
-}
-
-body[data-mantine-color-scheme='dark'] .terminal-time {
-  color: #928374;
-}
-
-body[data-mantine-color-scheme='light'] .terminal-time {
-  color: #928374;
-}
-
-.terminal-message {
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-  line-height: 1.55;
-  font-size: 0.88rem;
-}
-
-body[data-mantine-color-scheme='dark'] .terminal-message {
+:root[data-mantine-color-scheme='dark'] .conversation-role-assistant {
+  background: rgba(251, 241, 199, 0.1);
   color: #ebdbb2;
 }
 
-body[data-mantine-color-scheme='light'] .terminal-message {
+:root[data-mantine-color-scheme='light'] .conversation-role-user {
+  background: rgba(66, 123, 88, 0.12);
+  color: #427b58;
+}
+
+:root[data-mantine-color-scheme='light'] .conversation-role-assistant {
+  background: rgba(80, 73, 69, 0.1);
+  color: #504945;
+}
+
+.conversation-time {
+  font-size: 0.78rem;
+  opacity: 0.95;
+}
+
+.conversation-entry-user .conversation-time {
+  order: -1;
+}
+
+:root[data-mantine-color-scheme='dark'] .conversation-entry-user .conversation-time {
+  color: #f2fbf8;
+}
+
+:root[data-mantine-color-scheme='dark'] .conversation-entry-assistant .conversation-time {
+  color: #d5c4a1;
+}
+
+:root[data-mantine-color-scheme='light'] .conversation-entry-user .conversation-time {
+  color: #173b1d;
+}
+
+:root[data-mantine-color-scheme='light'] .conversation-entry-assistant .conversation-time {
+  color: #504945;
+}
+.conversation-message {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.96rem;
+  line-height: 1.7;
+}
+
+:root[data-mantine-color-scheme='dark'] .conversation-entry-user .conversation-message {
+  color: #f2fbf8;
+}
+
+:root[data-mantine-color-scheme='dark'] .conversation-entry-assistant .conversation-message {
+  color: #ebdbb2;
+}
+
+:root[data-mantine-color-scheme='light'] .conversation-entry-user .conversation-message {
+  color: #173b1d;
+}
+
+:root[data-mantine-color-scheme='light'] .conversation-entry-assistant .conversation-message {
   color: #3c3836;
 }

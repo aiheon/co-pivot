@@ -86,14 +86,9 @@ export default function App() {
           <Group gap="sm">
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
             <Stack gap={2}>
-              <Group gap="xs">
-                <Text fw={700} size="lg">
-                  co-pivot
-                </Text>
-                <Badge variant="light" color="cyan">
-                  local-first
-                </Badge>
-              </Group>
+              <Text fw={700} size="lg">
+                co-pivot
+              </Text>
               <Text size="sm" c="dimmed">
                 Switch Copilot CLI sessions, compare context, resume quickly.
               </Text>
@@ -166,35 +161,17 @@ export default function App() {
         />
       </AppShell.Navbar>
 
-      <AppShell.Main>
-        <Stack gap="md">
-          <Box className="hero-panel">
-            <Group justify="space-between" align="flex-start">
-              <Stack gap={4}>
-                <Text className="eyebrow">Session Switchboard</Text>
-                <Text className="hero-title">
-                  Keep multiple Copilot CLI threads within reach.
-                </Text>
-                <Text c="dimmed" maw={720}>
-                  co-pivot is designed to browse local Copilot CLI sessions,
-                  compare conversations side by side, and relaunch the one you
-                  need with minimal friction.
-                </Text>
-              </Stack>
-              <Badge size="lg" variant="light" color="cyan">
-                {preferredTerminal === 'iterm' ? 'iTerm resume' : 'Terminal resume'}
-              </Badge>
-            </Group>
+      <AppShell.Main style={{height: 'calc(100vh - 72px)', overflow: 'hidden'}}>
+        <Stack gap="md" h="100%" style={{minHeight: 0}}>
+
+          <Box style={{flex: 1, minHeight: 0}}>
+            <SessionSplitView
+              preferredTerminal={preferredTerminal}
+              sessions={activeSessions}
+              splitView={splitView}
+              onCloseSession={(id) => setActiveIds((current) => current.filter((activeId) => activeId !== id))}
+            />
           </Box>
-
-          <Divider />
-
-          <SessionSplitView
-            preferredTerminal={preferredTerminal}
-            sessions={activeSessions}
-            splitView={splitView}
-            onCloseSession={(id) => setActiveIds((current) => current.filter((activeId) => activeId !== id))}
-          />
         </Stack>
       </AppShell.Main>
     </AppShell>
