@@ -343,3 +343,24 @@ body {
 :root[data-mantine-color-scheme='light'] .conversation-entry-assistant .conversation-message {
   color: #3c3836;
 }
+
+
+.empty-state-card {
+  height: 100%;
+  min-height: 0;
+}
+
+:root[data-mantine-color-scheme='dark'] .empty-state-card {
+  background: rgba(40, 40, 40, 0.78);
+}
+
+:root[data-mantine-color-scheme='light'] .empty-state-card {
+  background: rgba(251, 241, 199, 0.82);
+}
+
+.empty-state-image {
+  width: 364px;
+  height: 364px;
+  object-fit: contain;
+  border-radius: 0;
+}

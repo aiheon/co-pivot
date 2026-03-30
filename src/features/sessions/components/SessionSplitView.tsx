@@ -208,12 +208,21 @@ function EmptyState({
   description: string;
 }) {
   return (
-    <Card withBorder padding="xl" radius="xl">
-      <Stack gap="xs">
-        <Text fw={700} size="lg">
-          {title}
-        </Text>
-        <Text c="dimmed">{description}</Text>
+    <Card withBorder padding="xl" radius="xl" className="empty-state-card">
+      <Stack align="center" justify="center" gap="md" h="100%" ta="center">
+        <img
+          src="/co-pivot-icon.png"
+          alt="co-pivot app icon"
+          className="empty-state-image"
+        />
+        <Stack gap={6} align="center">
+          <Text fw={700} size="xl">
+            {title}
+          </Text>
+          <Text c="dimmed" maw={420}>
+            {description}
+          </Text>
+        </Stack>
       </Stack>
     </Card>
   );
