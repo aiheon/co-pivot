@@ -1,6 +1,6 @@
 # co-pivot
 
-![co-pivot app icon](docs/assets/co-pivot-icon.png)
+<img src="docs/assets/co-pivot-icon.png" alt="co-pivot app icon" width="220" />
 
 co-pivot is a local-first desktop app for browsing GitHub Copilot CLI sessions, comparing them side by side, and resuming the right conversation quickly.
 
