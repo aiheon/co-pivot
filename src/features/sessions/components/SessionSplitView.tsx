@@ -84,7 +84,7 @@ function SessionPanel({
 
   return (
     <Card withBorder padding="lg" radius="xl" className="session-detail-card">
-      <Stack gap="md">
+      <Stack gap="md" h="100%">
         <Group justify="space-between" align="flex-start">
           <Stack gap={4}>
             <Text fw={700} size="lg">
@@ -135,31 +135,44 @@ function SessionPanel({
 
         <Divider />
 
-        <Stack gap="xs">
-          <Group gap={6}>
+        <Stack gap="xs" style={{flex: 1, minHeight: 0}}>          <Group gap={6}>
             <IconTerminal2 size={16} />
             <Text fw={600}>Conversation</Text>
           </Group>
 
-          <ScrollArea h={420} offsetScrollbars scrollbarSize={6}>
-            <Stack gap="sm">
-              {session.messages.map((message) => (
-                <Card key={message.id} withBorder radius="lg" padding="md">
-                  <Stack gap={6}>
-                    <Group justify="space-between">
-                      <Text tt="uppercase" size="xs" fw={700} c="cyan.3">
-                        {message.role}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {formatTime(message.createdAt)}
-                      </Text>
-                    </Group>
-                    <Text size="sm">{message.text}</Text>
-                  </Stack>
-                </Card>
-              ))}
-            </Stack>
-          </ScrollArea>
+          <Card withBorder radius="lg" padding="sm" className="terminal-shell" style={{flex: 1, minHeight: 0}}>            <Group justify="space-between" className="terminal-toolbar">
+              <Group gap={8}>
+                <span className="terminal-dot terminal-dot-red" />
+                <span className="terminal-dot terminal-dot-yellow" />
+                <span className="terminal-dot terminal-dot-green" />
+              </Group>
+              <Text size="xs" className="terminal-title">
+                {session.workspaceLabel} :: {session.id.slice(0, 8)}
+              </Text>
+            </Group>
+
+            <ScrollArea h="100%" offsetScrollbars scrollbarSize={6}>
+              <Stack gap={0} className="terminal-log">
+                {[...session.messages].reverse().map((message) => (
+                  <div key={message.id} className="terminal-entry">
+                    <div className="terminal-entry-header">
+                      <span
+                        className={
+                          message.role === 'user'
+                            ? 'terminal-role terminal-role-user'
+                            : 'terminal-role terminal-role-assistant'
+                        }
+                      >
+                        {message.role === 'user' ? '>' : '$'} {message.role}
+                      </span>
+                      <span className="terminal-time">{formatTime(message.createdAt)}</span>
+                    </div>
+                    <pre className="terminal-message">{message.text}</pre>
+                  </div>
+                ))}
+              </Stack>
+            </ScrollArea>
+          </Card>
         </Stack>
       </Stack>
     </Card>

@@ -1,4 +1,5 @@
 export type SessionStatus = 'active' | 'paused' | 'closed' | 'stale';
+export type SessionSortOption = 'recent' | 'oldest' | 'workspace';
 
 export interface SessionMessage {
   id: string;

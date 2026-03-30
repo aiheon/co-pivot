@@ -12,6 +12,7 @@ import {
   Stack,
   Text,
   Tooltip,
+  useMantineColorScheme,
 } from '@mantine/core';
 import {useDisclosure} from '@mantine/hooks';
 import {
@@ -32,6 +33,7 @@ import type {SessionSummary} from '@/features/sessions/types/session';
 
 export default function App() {
   const [opened, {toggle}] = useDisclosure();
+  const {colorScheme, setColorScheme} = useMantineColorScheme();
   const {
     sessions,
     refresh,
@@ -39,6 +41,12 @@ export default function App() {
     mode,
     activeIds,
     setActiveIds,
+    favoriteIds,
+    toggleFavorite,
+    favoritesOnly,
+    setFavoritesOnly,
+    sortOption,
+    setSortOption,
   } = useSessionWorkspace();
   const [splitView, setSplitView] = useState(true);
   const [preferredTerminal, setPreferredTerminalState] = useState<PreferredTerminal>('iterm');
@@ -53,10 +61,14 @@ export default function App() {
       .filter((session): session is SessionSummary => Boolean(session));
   }, [activeIds, sessions]);
 
-  const handleTerminalChange = async (value: string | null) => {
+  const handleTerminalChange = async (value: string) => {
     const terminal = value === 'terminal' ? 'terminal' : 'iterm';
     const saved = await setPreferredTerminal(terminal);
     setPreferredTerminalState(saved);
+  };
+
+  const toggleColorScheme = () => {
+    setColorScheme(colorScheme === 'dark' ? 'light' : 'dark');
   };
 
   return (
@@ -75,6 +87,20 @@ export default function App() {
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
             <Stack gap={2}>
               <Group gap="xs">
+                <Text fw={700} size="lg">
+                  co-pivot
+                </Text>
+                <Badge variant="light" color="cyan">
+                  local-first
+                </Badge>
+              </Group>
+              <Text size="sm" c="dimmed">
+                Switch Copilot CLI sessions, compare context, resume quickly.
+              </Text>
+            </Stack>
+          </Group>
+
+          <Group gap="xs">
             <SegmentedControl
               value={preferredTerminal}
               onChange={(value) => void handleTerminalChange(value)}
@@ -90,20 +116,6 @@ export default function App() {
                 label: {paddingInline: 10, fontSize: 12},
               }}
             />
-                <Text fw={700} size="lg">
-                  co-pivot
-                </Text>
-                <Badge variant="light" color="cyan">
-                  local-first
-                </Badge>
-              </Group>
-              <Text size="sm" c="dimmed">
-                Switch Copilot CLI sessions, compare context, resume quickly.
-              </Text>
-            </Stack>
-          </Group>
-
-          <Group gap="xs">
             <Badge color={mode === 'mock' ? 'yellow' : 'teal'} variant="dot">
               {mode === 'mock' ? 'Mock data' : 'Local data'}
             </Badge>
@@ -117,14 +129,14 @@ export default function App() {
                 <IconArrowAutofitWidth size={18} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Dark mode is the default for v1">
-              <ActionIcon variant="light" size="lg" color="gray">
-                <IconMoonStars size={18} />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label="Light mode is planned">
-              <ActionIcon variant="subtle" size="lg" color="gray">
-                <IconSun size={18} />
+            <Tooltip label={colorScheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
+              <ActionIcon
+                variant="light"
+                size="lg"
+                color="gray"
+                onClick={toggleColorScheme}
+              >
+                {colorScheme === 'dark' ? <IconSun size={18} /> : <IconMoonStars size={18} />}
               </ActionIcon>
             </Tooltip>
             <Button
@@ -143,8 +155,14 @@ export default function App() {
         <SessionListPane
           sessions={sessions}
           activeIds={activeIds}
+          favoriteIds={favoriteIds}
+          favoritesOnly={favoritesOnly}
           splitView={splitView}
+          sortOption={sortOption}
           onSelectSession={(id) => setActiveIds((current) => nextActiveIds(current, id, splitView))}
+          onToggleFavorite={toggleFavorite}
+          onFavoritesOnlyChange={setFavoritesOnly}
+          onSortChange={setSortOption}
         />
       </AppShell.Navbar>
 
