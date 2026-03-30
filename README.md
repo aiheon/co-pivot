@@ -1,5 +1,7 @@
 # co-pivot
 
+![co-pivot app icon](docs/assets/co-pivot-icon.png)
+
 co-pivot is a local-first desktop app for browsing GitHub Copilot CLI sessions, comparing them side by side, and resuming the right conversation quickly.
 
 ## What it does today
@@ -61,7 +63,7 @@ co-pivot can now be packaged as a real macOS application that you can move into 
 bun run dist:dir
 ```
 
-This produces a packaged `.app` bundle inside `release/mac`.
+This produces a packaged `.app` bundle inside `release/mac-arm64`.
 
 ### Create distributable archives
 
@@ -73,10 +75,19 @@ This builds the app and generates macOS artifacts in `release/`, including a DMG
 
 ### Install it in Applications
 
-1. Run `bun run dist:dir` or `bun run dist`
-2. Open the generated `release` folder
-3. Drag `co-pivot.app` into `Applications`
-4. Launch it from Launchpad, Spotlight, Finder, or the Applications folder
+1. Run `bun run dist:dir`
+2. Open `release/mac-arm64`
+3. Find `co-pivot.app`
+4. Drag `co-pivot.app` into `Applications`
+5. Launch it from Launchpad, Spotlight, Finder, or the Applications folder
+
+You can also open the packaged app directly from the terminal:
+
+```bash
+open /Users/aiheon/Developper/co-pivot/release/mac-arm64/co-pivot.app
+```
+
+If macOS blocks the first launch, right-click the app, choose `Open`, then confirm.
 
 ## Notes
 
@@ -84,10 +95,10 @@ This builds the app and generates macOS artifacts in `release/`, including a DMG
 - Session discovery is based on the local Copilot session-state format, so we should expect that format to evolve over time.
 - `Resume` opens a new terminal window/tab and keeps co-pivot open.
 - The preferred terminal is stored locally in Electron user data.
-- Packaging currently uses the default Electron app icon until a custom icon is added.
+- The packaged macOS app targets Apple Silicon (`arm64`).
 
 ## Next steps
 
-1. Add a custom app icon for macOS packaging
-2. Improve session status and preview derivation from richer event data
-3. Explore richer multi-session workflows after the core actions feel solid
+1. Improve session status and preview derivation from richer event data
+2. Explore richer multi-session workflows after the core actions feel solid
+3. Add signing and notarization for smoother macOS distribution
