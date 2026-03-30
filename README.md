@@ -10,8 +10,10 @@ co-pivot is a local-first desktop app for browsing GitHub Copilot CLI sessions, 
 
 - Runs as a desktop app with `Electron + React + Mantine`
 - Reads local GitHub Copilot CLI sessions from `~/.copilot/session-state`
-- Lists sessions with status, workspace, transcript previews, favorites, and sorting
+- Lists sessions with status, workspace, transcript previews, favorites, sorting, and a `favorites only` filter
 - Supports a free split view for comparing two sessions side by side
+- Shows conversations in a chat-style view built for resuming context quickly
+- Lets you close a session pane without affecting the underlying Copilot session
 - Opens `iTerm` or `Terminal.app` with `copilot --resume <session-id>` when you click `Resume`
 - Lets you choose the preferred terminal in the app, with the choice persisted locally
 - Supports dark and light themes, with dark mode enabled by default
@@ -96,6 +98,7 @@ If macOS blocks the first launch, right-click the app, choose `Open`, then confi
 - co-pivot currently targets GitHub Copilot CLI only.
 - Session discovery is based on the local Copilot session-state format, so we should expect that format to evolve over time.
 - `Resume` opens a new terminal window/tab and keeps co-pivot open.
+- The switchboard UI is intentionally minimal and optimized for browsing, comparing, and resuming sessions quickly.
 - The preferred terminal is stored locally in Electron user data.
 - The packaged macOS app targets Apple Silicon (`arm64`).
 
