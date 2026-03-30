@@ -11,7 +11,7 @@ import {
   Stack,
   Text,
 } from '@mantine/core';
-import {IconAlertCircle, IconPlayerPlay, IconTerminal2} from '@tabler/icons-react';
+import {IconAlertCircle, IconPlayerPlay, IconTerminal2, IconX} from '@tabler/icons-react';
 import {
   resumeSession,
   type PreferredTerminal,
@@ -22,14 +22,14 @@ interface SessionSplitViewProps {
   preferredTerminal: PreferredTerminal;
   sessions: SessionSummary[];
   splitView: boolean;
-  onSelectSecondary: (id: string) => void;
+  onCloseSession: (id: string) => void;
 }
 
 export function SessionSplitView({
   preferredTerminal,
   sessions,
   splitView,
-  onSelectSecondary,
+  onCloseSession,
 }: SessionSplitViewProps) {
   if (sessions.length === 0) {
     return (
@@ -41,16 +41,26 @@ export function SessionSplitView({
   }
 
   if (!splitView || sessions.length === 1) {
-    return <SessionPanel preferredTerminal={preferredTerminal} session={sessions[0]} />;
+    return (
+      <SessionPanel
+        preferredTerminal={preferredTerminal}
+        session={sessions[0]}
+        onClose={() => onCloseSession(sessions[0].id)}
+      />
+    );
   }
 
   return (
     <SimpleGrid cols={{base: 1, lg: 2}} spacing="md">
-      <SessionPanel preferredTerminal={preferredTerminal} session={sessions[0]} />
+      <SessionPanel
+        preferredTerminal={preferredTerminal}
+        session={sessions[0]}
+        onClose={() => onCloseSession(sessions[0].id)}
+      />
       <SessionPanel
         preferredTerminal={preferredTerminal}
         session={sessions[1]}
-        onPromote={() => onSelectSecondary(sessions[1].id)}
+        onClose={() => onCloseSession(sessions[1].id)}
       />
     </SimpleGrid>
   );
@@ -59,11 +69,11 @@ export function SessionSplitView({
 function SessionPanel({
   preferredTerminal,
   session,
-  onPromote,
+  onClose,
 }: {
   preferredTerminal: PreferredTerminal;
   session: SessionSummary;
-  onPromote?: () => void;
+  onClose: () => void;
 }) {
   const [resumeError, setResumeError] = useState<string | null>(null);
   const [isResuming, setIsResuming] = useState(false);
@@ -96,11 +106,14 @@ function SessionPanel({
           </Stack>
 
           <Group gap="xs">
-            {onPromote ? (
-              <Button variant="subtle" size="xs" onClick={onPromote}>
-                Keep on right
-              </Button>
-            ) : null}
+            <Button
+              variant="default"
+              size="xs"
+              leftSection={<IconX size={14} />}
+              onClick={onClose}
+            >
+              Close pane
+            </Button>
             <Button
               leftSection={<IconPlayerPlay size={14} />}
               size="xs"

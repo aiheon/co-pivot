@@ -193,7 +193,7 @@ export default function App() {
             preferredTerminal={preferredTerminal}
             sessions={activeSessions}
             splitView={splitView}
-            onSelectSecondary={(id) => setActiveIds((current) => nextSecondaryId(current, id))}
+            onCloseSession={(id) => setActiveIds((current) => current.filter((activeId) => activeId !== id))}
           />
         </Stack>
       </AppShell.Main>
@@ -221,14 +221,3 @@ function nextActiveIds(current: string[], id: string, splitView: boolean) {
   return [current[1], id];
 }
 
-function nextSecondaryId(current: string[], id: string) {
-  if (current.length === 0) {
-    return [id];
-  }
-
-  if (current.length === 1) {
-    return [current[0], id];
-  }
-
-  return [current[0], id];
-}
