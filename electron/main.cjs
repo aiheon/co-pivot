@@ -22,7 +22,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: true,
     },
   });
 
@@ -36,10 +36,33 @@ function createWindow() {
 
 app.whenReady().then(() => {
   ipcMain.handle('sessions:list', async () => listSessions());
-  ipcMain.handle('shell:openPath', async (_event, targetPath) => shell.openPath(targetPath));
-  ipcMain.handle('sessions:resume', async (_event, payload) => resumeSession(payload));
+
+  ipcMain.handle('shell:openPath', async (_event, targetPath) => {
+    if (typeof targetPath !== 'string') {
+      throw new Error('Invalid path.');
+    }
+    const resolved = path.resolve(targetPath);
+    if (!resolved.startsWith(os.homedir())) {
+      throw new Error('Path outside home directory is not allowed.');
+    }
+    return shell.openPath(resolved);
+  });
+
+  ipcMain.handle('sessions:resume', async (_event, payload) => {
+    if (typeof payload !== 'object' || payload === null) {
+      throw new Error('Invalid payload.');
+    }
+    return resumeSession(payload);
+  });
+
   ipcMain.handle('preferences:getTerminal', async () => getPreferredTerminal());
-  ipcMain.handle('preferences:setTerminal', async (_event, terminal) => setPreferredTerminal(terminal));
+
+  ipcMain.handle('preferences:setTerminal', async (_event, terminal) => {
+    if (typeof terminal !== 'string') {
+      throw new Error('Invalid terminal value.');
+    }
+    return setPreferredTerminal(terminal);
+  });
 
   createWindow();
 
@@ -102,7 +125,7 @@ function parseSessionDir(sessionDir) {
 
 function readWorkspace(filePath) {
   try {
-    return yaml.load(fs.readFileSync(filePath, 'utf8')) || {};
+    return yaml.load(fs.readFileSync(filePath, 'utf8'), {schema: yaml.JSON_SCHEMA}) || {};
   } catch {
     return {};
   }
@@ -226,12 +249,14 @@ function lastMessageDate(messages) {
   return messages[messages.length - 1]?.createdAt || '';
 }
 
+const SESSION_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
+
 function resumeSession(payload) {
   const sessionId = typeof payload?.sessionId === 'string' ? payload.sessionId : '';
   const preferredTerminal = normalizeTerminal(payload?.terminal) || getPreferredTerminal();
 
-  if (!sessionId) {
-    throw new Error('A session id is required to resume a Copilot session.');
+  if (!sessionId || !SESSION_ID_PATTERN.test(sessionId)) {
+    throw new Error('A valid session id is required to resume a Copilot session.');
   }
 
   assertCopilotAvailable();

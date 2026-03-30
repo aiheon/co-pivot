@@ -95,7 +95,12 @@ function SessionPanel({
     try {
       await resumeSession(session.id, preferredTerminal);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to resume this Copilot session.';
+      const known =
+        error instanceof Error &&
+        ['COPILOT_NOT_FOUND', 'ITERM_UNAVAILABLE'].includes((error as Error & {code?: string}).code ?? '');
+      const message = known
+        ? (error as Error).message
+        : 'Unable to resume this Copilot session. Please try again or restart the app.';
       setResumeError(message);
     } finally {
       setIsResuming(false);
