@@ -6,7 +6,6 @@ import {
   Box,
   Burger,
   Button,
-  Divider,
   Group,
   SegmentedControl,
   Stack,
@@ -31,6 +30,9 @@ import {
 import {useSessionWorkspace} from '@/features/sessions/lib/useSessionWorkspace';
 import type {SessionSummary} from '@/features/sessions/types/session';
 
+const SESSION_PANE_SIDE_KEY = 'co-pivot-session-pane-side';
+type SessionPaneSide = 'left' | 'right';
+
 export default function App() {
   const [opened, {toggle}] = useDisclosure();
   const {colorScheme, setColorScheme} = useMantineColorScheme();
@@ -52,6 +54,7 @@ export default function App() {
   } = useSessionWorkspace();
   const [splitView, setSplitView] = useState(true);
   const [preferredTerminal, setPreferredTerminalState] = useState<PreferredTerminal>('iterm');
+  const [sessionPaneSide, setSessionPaneSide] = useState<SessionPaneSide>(() => readSessionPaneSide());
 
   useEffect(() => {
     void getPreferredTerminal().then(setPreferredTerminalState);
@@ -69,9 +72,32 @@ export default function App() {
     setPreferredTerminalState(saved);
   };
 
+  const handleSessionPaneSideChange = (value: string) => {
+    const next = value === 'right' ? 'right' : 'left';
+    setSessionPaneSide(next);
+    localStorage.setItem(SESSION_PANE_SIDE_KEY, next);
+  };
+
   const toggleColorScheme = () => {
     setColorScheme(colorScheme === 'dark' ? 'light' : 'dark');
   };
+
+  const sessionPane = (
+    <SessionListPane
+      sessions={sessions}
+      activeIds={activeIds}
+      favoriteIds={favoriteIds}
+      favoritesOnly={favoritesOnly}
+      splitView={splitView}
+      sortOption={sortOption}
+      onSelectSession={(id) => setActiveIds((current) => nextActiveIds(current, id, splitView))}
+      onToggleFavorite={toggleFavorite}
+      onFavoritesOnlyChange={setFavoritesOnly}
+      showEmptySessions={showEmptySessions}
+      onShowEmptySessionsChange={setShowEmptySessions}
+      onSortChange={setSortOption}
+    />
+  );
 
   return (
     <AppShell
@@ -79,7 +105,12 @@ export default function App() {
       navbar={{
         width: 420,
         breakpoint: 'sm',
-        collapsed: {mobile: !opened},
+        collapsed: {mobile: !opened, desktop: sessionPaneSide !== 'left'},
+      }}
+      aside={{
+        width: 420,
+        breakpoint: 'sm',
+        collapsed: {mobile: !opened, desktop: sessionPaneSide !== 'right'},
       }}
       padding="md"
     >
@@ -98,6 +129,21 @@ export default function App() {
           </Group>
 
           <Group gap="xs">
+            <SegmentedControl
+              value={sessionPaneSide}
+              onChange={handleSessionPaneSideChange}
+              data={[
+                {label: 'Left', value: 'left'},
+                {label: 'Right', value: 'right'},
+              ]}
+              size="xs"
+              radius="md"
+              aria-label="Session pane side"
+              styles={{
+                root: {maxWidth: 124, flexShrink: 0},
+                label: {paddingInline: 10, fontSize: 12},
+              }}
+            />
             <SegmentedControl
               value={preferredTerminal}
               onChange={(value) => void handleTerminalChange(value)}
@@ -148,26 +194,12 @@ export default function App() {
         </Group>
       </AppShell.Header>
 
-      <AppShell.Navbar p="md">
-        <SessionListPane
-          sessions={sessions}
-          activeIds={activeIds}
-          favoriteIds={favoriteIds}
-          favoritesOnly={favoritesOnly}
-          splitView={splitView}
-          sortOption={sortOption}
-          onSelectSession={(id) => setActiveIds((current) => nextActiveIds(current, id, splitView))}
-          onToggleFavorite={toggleFavorite}
-          onFavoritesOnlyChange={setFavoritesOnly}
-          showEmptySessions={showEmptySessions}
-          onShowEmptySessionsChange={setShowEmptySessions}
-          onSortChange={setSortOption}
-        />
-      </AppShell.Navbar>
+      <AppShell.Navbar p="md">{sessionPane}</AppShell.Navbar>
+
+      <AppShell.Aside p="md">{sessionPane}</AppShell.Aside>
 
       <AppShell.Main style={{height: 'calc(100vh - 72px)', overflow: 'hidden'}}>
         <Stack gap="md" h="100%" style={{minHeight: 0}}>
-
           <Box style={{flex: 1, minHeight: 0}}>
             <SessionSplitView
               preferredTerminal={preferredTerminal}
@@ -202,3 +234,7 @@ function nextActiveIds(current: string[], id: string, splitView: boolean) {
   return [current[1], id];
 }
 
+function readSessionPaneSide(): SessionPaneSide {
+  const raw = localStorage.getItem(SESSION_PANE_SIDE_KEY);
+  return raw === 'right' ? 'right' : 'left';
+}

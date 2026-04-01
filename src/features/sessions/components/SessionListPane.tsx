@@ -112,50 +112,38 @@ export function SessionListPane({
               >
                 <Stack gap="sm">
                   <Group justify="space-between" align="flex-start" wrap="nowrap">
-                    <Box maw="72%">
+                    <Box maw="78%">
                       <Text fw={600}>{session.title}</Text>
                       <Text size="sm" c="dimmed" truncate>
                         {session.workspaceLabel}
                       </Text>
                     </Box>
-                    <Group gap={6} wrap="nowrap">
-                      <ActionIcon
-                        variant="subtle"
-                        color={isFavorite ? 'yellow' : 'gray'}
-                        aria-label={isFavorite ? 'Remove favorite' : 'Add favorite'}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onToggleFavorite(session.id);
-                        }}
-                      >
-                        {isFavorite ? <IconStarFilled size={16} /> : <IconStar size={16} />}
-                      </ActionIcon>
+                    <ActionIcon
+                      variant="subtle"
+                      color={isFavorite ? 'yellow' : 'gray'}
+                      aria-label={isFavorite ? 'Remove favorite' : 'Add favorite'}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onToggleFavorite(session.id);
+                      }}
+                    >
+                      {isFavorite ? <IconStarFilled size={16} /> : <IconStar size={16} />}
+                    </ActionIcon>
+                  </Group>
+
+                  <Text size="sm" fw={600}>
+                    Updated {formatListTimestamp(session.updatedAt)}
+                  </Text>
+
+                  <Group justify="space-between" align="flex-end" wrap="nowrap">
+                    <Group gap={6} wrap="wrap">
                       <Badge size="sm" color={statusColor[session.status]} variant="light">
                         {session.status}
                       </Badge>
                     </Group>
-                  </Group>
-
-                  <Text size="sm" c="dimmed" lineClamp={2}>
-                    {session.lastSnippet}
-                  </Text>
-
-                  <Group justify="space-between" align="flex-end">
-                    <Group gap={6}>
-                      {session.tags.map((tag) => (
-                        <Badge key={tag} variant="dot" color="gray">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </Group>
-                    <Box ta="right">
-                      <Text size="xs" c="dimmed">
-                        Updated {formatListTimestamp(session.updatedAt)}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {session.messageCount} msgs
-                      </Text>
-                    </Box>
+                    <Text size="xs" c="dimmed">
+                      {session.messageCount} msgs
+                    </Text>
                   </Group>
                 </Stack>
               </Card>
@@ -184,19 +172,10 @@ const statusColor = {
 } as const;
 
 function formatListTimestamp(value: string) {
-  const date = new Date(value);
-  const now = new Date();
-  const sameDay = date.toDateString() === now.toDateString();
-
-  if (sameDay) {
-    return new Intl.DateTimeFormat('en-CA', {
-      hour: 'numeric',
-      minute: '2-digit',
-    }).format(date);
-  }
-
   return new Intl.DateTimeFormat('en-CA', {
     month: 'short',
     day: 'numeric',
-  }).format(date);
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(value));
 }
