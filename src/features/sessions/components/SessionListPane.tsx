@@ -21,11 +21,13 @@ interface SessionListPaneProps {
   activeIds: string[];
   favoriteIds: string[];
   favoritesOnly: boolean;
+  showEmptySessions: boolean;
   splitView: boolean;
   sortOption: SessionSortOption;
   onSelectSession: (id: string) => void;
   onToggleFavorite: (id: string) => void;
   onFavoritesOnlyChange: (value: boolean) => void;
+  onShowEmptySessionsChange: (value: boolean) => void;
   onSortChange: (option: SessionSortOption) => void;
 }
 
@@ -34,11 +36,13 @@ export function SessionListPane({
   activeIds,
   favoriteIds,
   favoritesOnly,
+  showEmptySessions,
   splitView,
   sortOption,
   onSelectSession,
   onToggleFavorite,
   onFavoritesOnlyChange,
+  onShowEmptySessionsChange,
   onSortChange,
 }: SessionListPaneProps) {
   const favoriteSet = new Set(favoriteIds);
@@ -65,7 +69,7 @@ export function SessionListPane({
         ]}
       />
 
-      <Group justify="space-between" align="center">
+      <Group justify="space-between" align="flex-start">
         <Group gap="xs">
           <Badge variant="light" color="cyan">
             {sessions.length} shown
@@ -77,12 +81,20 @@ export function SessionListPane({
             {splitView ? 'Split view on' : 'Single view'}
           </Badge>
         </Group>
-        <Switch
-          checked={favoritesOnly}
-          onChange={(event) => onFavoritesOnlyChange(event.currentTarget.checked)}
-          size="sm"
-          label="Favorites only"
-        />
+        <Stack gap={6} align="stretch" maw={180}>
+          <Switch
+            checked={favoritesOnly}
+            onChange={(event) => onFavoritesOnlyChange(event.currentTarget.checked)}
+            size="sm"
+            label="Favorites only"
+          />
+          <Switch
+            checked={showEmptySessions}
+            onChange={(event) => onShowEmptySessionsChange(event.currentTarget.checked)}
+            size="sm"
+            label="Show empty sessions"
+          />
+        </Stack>
       </Group>
 
       <ScrollArea type="never" offsetScrollbars scrollbarSize={6} flex={1}>
@@ -128,7 +140,7 @@ export function SessionListPane({
                     {session.lastSnippet}
                   </Text>
 
-                  <Group justify="space-between">
+                  <Group justify="space-between" align="flex-end">
                     <Group gap={6}>
                       {session.tags.map((tag) => (
                         <Badge key={tag} variant="dot" color="gray">
@@ -136,9 +148,14 @@ export function SessionListPane({
                         </Badge>
                       ))}
                     </Group>
-                    <Text size="xs" c="dimmed">
-                      {session.messageCount} msgs
-                    </Text>
+                    <Box ta="right">
+                      <Text size="xs" c="dimmed">
+                        Updated {formatListTimestamp(session.updatedAt)}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {session.messageCount} msgs
+                      </Text>
+                    </Box>
                   </Group>
                 </Stack>
               </Card>
@@ -165,3 +182,21 @@ const statusColor = {
   closed: 'gray',
   stale: 'red',
 } as const;
+
+function formatListTimestamp(value: string) {
+  const date = new Date(value);
+  const now = new Date();
+  const sameDay = date.toDateString() === now.toDateString();
+
+  if (sameDay) {
+    return new Intl.DateTimeFormat('en-CA', {
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(date);
+  }
+
+  return new Intl.DateTimeFormat('en-CA', {
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
+}

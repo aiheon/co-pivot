@@ -8,6 +8,7 @@ import {loadSessions} from './sessionSource';
 
 const FAVORITES_KEY = 'co-pivot-favorite-session-ids';
 const FAVORITES_ONLY_KEY = 'co-pivot-favorites-only';
+const SHOW_EMPTY_SESSIONS_KEY = 'co-pivot-show-empty-sessions';
 const SORT_KEY = 'co-pivot-session-sort';
 
 export function useSessionWorkspace() {
@@ -20,6 +21,7 @@ export function useSessionWorkspace() {
   ]);
   const [favoriteIds, setFavoriteIds] = useState<string[]>(() => readFavoriteIds());
   const [favoritesOnly, setFavoritesOnlyState] = useState<boolean>(() => readFavoritesOnly());
+  const [showEmptySessions, setShowEmptySessionsState] = useState<boolean>(() => readShowEmptySessions());
   const [sortOption, setSortOptionState] = useState<SessionSortOption>(() => readSortOption());
 
   const refresh = async () => {
@@ -38,23 +40,16 @@ export function useSessionWorkspace() {
   const sessions = useMemo(() => {
     const sorted = [...baseSessions].sort((left, right) => compareSessions(left, right, sortOption));
     const favoriteSet = new Set(favoriteIds);
-    const ordered = sorted.sort((left, right) => {
-      const leftFavorite = favoriteSet.has(left.id);
-      const rightFavorite = favoriteSet.has(right.id);
-
-      if (leftFavorite === rightFavorite) {
-        return compareSessions(left, right, sortOption);
-      }
-
-      return leftFavorite ? -1 : 1;
-    });
+    const visible = showEmptySessions
+      ? sorted
+      : sorted.filter((session) => session.messageCount > 0);
 
     if (!favoritesOnly) {
-      return ordered;
+      return visible;
     }
 
-    return ordered.filter((session) => favoriteSet.has(session.id));
-  }, [baseSessions, favoriteIds, favoritesOnly, sortOption]);
+    return visible.filter((session) => favoriteSet.has(session.id));
+  }, [baseSessions, favoriteIds, favoritesOnly, showEmptySessions, sortOption]);
 
   const toggleFavorite = (sessionId: string) => {
     setFavoriteIds((current) => {
@@ -76,6 +71,11 @@ export function useSessionWorkspace() {
     localStorage.setItem(FAVORITES_ONLY_KEY, JSON.stringify(value));
   };
 
+  const setShowEmptySessions = (value: boolean) => {
+    setShowEmptySessionsState(value);
+    localStorage.setItem(SHOW_EMPTY_SESSIONS_KEY, JSON.stringify(value));
+  };
+
   return {
     sessions,
     mode,
@@ -87,6 +87,8 @@ export function useSessionWorkspace() {
     toggleFavorite,
     favoritesOnly,
     setFavoritesOnly,
+    showEmptySessions,
+    setShowEmptySessions,
     sortOption,
     setSortOption,
   };
@@ -109,6 +111,14 @@ function readFavoriteIds() {
 function readFavoritesOnly() {
   try {
     return JSON.parse(localStorage.getItem(FAVORITES_ONLY_KEY) ?? 'false') === true;
+  } catch {
+    return false;
+  }
+}
+
+function readShowEmptySessions() {
+  try {
+    return JSON.parse(localStorage.getItem(SHOW_EMPTY_SESSIONS_KEY) ?? 'false') === true;
   } catch {
     return false;
   }

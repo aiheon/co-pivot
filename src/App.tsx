@@ -45,6 +45,8 @@ export default function App() {
     toggleFavorite,
     favoritesOnly,
     setFavoritesOnly,
+    showEmptySessions,
+    setShowEmptySessions,
     sortOption,
     setSortOption,
   } = useSessionWorkspace();
@@ -75,7 +77,7 @@ export default function App() {
     <AppShell
       header={{height: 72}}
       navbar={{
-        width: 360,
+        width: 420,
         breakpoint: 'sm',
         collapsed: {mobile: !opened},
       }}
@@ -157,6 +159,8 @@ export default function App() {
           onSelectSession={(id) => setActiveIds((current) => nextActiveIds(current, id, splitView))}
           onToggleFavorite={toggleFavorite}
           onFavoritesOnlyChange={setFavoritesOnly}
+          showEmptySessions={showEmptySessions}
+          onShowEmptySessionsChange={setShowEmptySessions}
           onSortChange={setSortOption}
         />
       </AppShell.Navbar>
