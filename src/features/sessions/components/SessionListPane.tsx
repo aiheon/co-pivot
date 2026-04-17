@@ -3,6 +3,7 @@ import {
   Badge,
   Box,
   Card,
+  Divider,
   Group,
   ScrollArea,
   SegmentedControl,
@@ -46,6 +47,8 @@ export function SessionListPane({
   onSortChange,
 }: SessionListPaneProps) {
   const favoriteSet = new Set(favoriteIds);
+  const groupedSessions =
+    sortOption === 'workspace' ? null : groupSessionsByDate(sessions);
 
   return (
     <Stack gap="md" h="100%">
@@ -99,56 +102,43 @@ export function SessionListPane({
 
       <ScrollArea type="never" offsetScrollbars scrollbarSize={6} flex={1}>
         <Stack gap="sm">
-          {sessions.map((session) => {
-            const isActive = activeIds.includes(session.id);
-            const isFavorite = favoriteSet.has(session.id);
-
-            return (
-              <Card
-                key={session.id}
-                className={isActive ? 'session-card active' : 'session-card'}
-                withBorder
-                onClick={() => onSelectSession(session.id)}
-              >
-                <Stack gap="sm">
-                  <Group justify="space-between" align="flex-start" wrap="nowrap">
-                    <Box maw="78%">
-                      <Text fw={600}>{session.title}</Text>
-                      <Text size="sm" c="dimmed" truncate>
-                        {session.workspaceLabel}
-                      </Text>
-                    </Box>
-                    <ActionIcon
-                      variant="subtle"
-                      color={isFavorite ? 'yellow' : 'gray'}
-                      aria-label={isFavorite ? 'Remove favorite' : 'Add favorite'}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onToggleFavorite(session.id);
-                      }}
-                    >
-                      {isFavorite ? <IconStarFilled size={16} /> : <IconStar size={16} />}
-                    </ActionIcon>
-                  </Group>
-
-                  <Text size="sm" fw={600}>
-                    Updated {formatListTimestamp(session.updatedAt)}
+          {groupedSessions ? (
+            groupedSessions.map((group) => (
+              <Stack key={group.key} gap="sm" className="session-date-group">
+                <Group gap="sm" wrap="nowrap" align="center" className="session-date-group-header">
+                  <Text size="xs" fw={700} className="session-date-group-label">
+                    {group.label}
                   </Text>
+                  <Divider orientation="horizontal" style={{flex: 1}} />
+                  <Text size="xs" c="dimmed" className="session-date-group-count">
+                    {group.sessions.length}
+                  </Text>
+                </Group>
 
-                  <Group justify="space-between" align="flex-end" wrap="nowrap">
-                    <Group gap={6} wrap="wrap">
-                      <Badge size="sm" color={statusColor[session.status]} variant="light">
-                        {session.status}
-                      </Badge>
-                    </Group>
-                    <Text size="xs" c="dimmed">
-                      {session.messageCount} msgs
-                    </Text>
-                  </Group>
-                </Stack>
-              </Card>
-            );
-          })}
+                {group.sessions.map((session) => (
+                  <SessionListCard
+                    key={session.id}
+                    session={session}
+                    isActive={activeIds.includes(session.id)}
+                    isFavorite={favoriteSet.has(session.id)}
+                    onSelectSession={onSelectSession}
+                    onToggleFavorite={onToggleFavorite}
+                  />
+                ))}
+              </Stack>
+            ))
+          ) : (
+            sessions.map((session) => (
+              <SessionListCard
+                key={session.id}
+                session={session}
+                isActive={activeIds.includes(session.id)}
+                isFavorite={favoriteSet.has(session.id)}
+                onSelectSession={onSelectSession}
+                onToggleFavorite={onToggleFavorite}
+              />
+            ))
+          )}
 
           {sessions.length === 0 ? (
             <Card withBorder radius="lg" padding="lg">
@@ -164,12 +154,123 @@ export function SessionListPane({
   );
 }
 
+function SessionListCard({
+  session,
+  isActive,
+  isFavorite,
+  onSelectSession,
+  onToggleFavorite,
+}: {
+  session: SessionSummary;
+  isActive: boolean;
+  isFavorite: boolean;
+  onSelectSession: (id: string) => void;
+  onToggleFavorite: (id: string) => void;
+}) {
+  return (
+    <Card
+      className={isActive ? 'session-card active' : 'session-card'}
+      withBorder
+      onClick={() => onSelectSession(session.id)}
+    >
+      <Stack gap="sm">
+        <Group justify="space-between" align="flex-start" wrap="nowrap">
+          <Box maw="78%">
+            <Text fw={600}>{session.title}</Text>
+            <Text size="sm" c="dimmed" truncate>
+              {session.workspaceLabel}
+            </Text>
+          </Box>
+          <ActionIcon
+            variant="subtle"
+            color={isFavorite ? 'yellow' : 'gray'}
+            aria-label={isFavorite ? 'Remove favorite' : 'Add favorite'}
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggleFavorite(session.id);
+            }}
+          >
+            {isFavorite ? <IconStarFilled size={16} /> : <IconStar size={16} />}
+          </ActionIcon>
+        </Group>
+
+        <Text size="sm" fw={600}>
+          Updated {formatListTimestamp(session.updatedAt)}
+        </Text>
+
+        <Group justify="space-between" align="flex-end" wrap="nowrap">
+          <Group gap={6} wrap="wrap">
+            <Badge size="sm" color={statusColor[session.status]} variant="light">
+              {session.status}
+            </Badge>
+          </Group>
+          <Text size="xs" c="dimmed">
+            {session.messageCount} msgs
+          </Text>
+        </Group>
+      </Stack>
+    </Card>
+  );
+}
+
 const statusColor = {
   active: 'teal',
   paused: 'yellow',
   closed: 'gray',
   stale: 'red',
 } as const;
+
+function groupSessionsByDate(sessions: SessionSummary[]) {
+  const groups = new Map<string, SessionSummary[]>();
+
+  for (const session of sessions) {
+    const key = toDateKey(session.updatedAt);
+    const current = groups.get(key) ?? [];
+    current.push(session);
+    groups.set(key, current);
+  }
+
+  return Array.from(groups.entries()).map(([key, groupedSessions]) => ({
+    key,
+    label: formatDateGroupLabel(key),
+    sessions: groupedSessions,
+  }));
+}
+
+function toDateKey(value: string) {
+  const date = new Date(value);
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatDateGroupLabel(dateKey: string) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  const target = new Date(`${dateKey}T00:00:00`);
+  const targetTime = target.getTime();
+
+  if (targetTime === today.getTime()) {
+    return 'TODAY';
+  }
+
+  if (targetTime === yesterday.getTime()) {
+    return 'YESTERDAY';
+  }
+
+  return new Intl.DateTimeFormat('en-CA', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  })
+    .format(target)
+    .toUpperCase();
+}
 
 function formatListTimestamp(value: string) {
   return new Intl.DateTimeFormat('en-CA', {
