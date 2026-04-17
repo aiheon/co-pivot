@@ -25,14 +25,12 @@ interface SessionListPaneProps {
   favoriteIds: string[];
   favoritesOnly: boolean;
   searchQuery: string;
-  showEmptySessions: boolean;
   splitView: boolean;
   sortOption: SessionSortOption;
   onSelectSession: (id: string) => void;
   onToggleFavorite: (id: string) => void;
   onFavoritesOnlyChange: (value: boolean) => void;
   onSearchQueryChange: (value: string) => void;
-  onShowEmptySessionsChange: (value: boolean) => void;
   onSortChange: (option: SessionSortOption) => void;
 }
 
@@ -42,14 +40,12 @@ export function SessionListPane({
   favoriteIds,
   favoritesOnly,
   searchQuery,
-  showEmptySessions,
   splitView,
   sortOption,
   onSelectSession,
   onToggleFavorite,
   onFavoritesOnlyChange,
   onSearchQueryChange,
-  onShowEmptySessionsChange,
   onSortChange,
 }: SessionListPaneProps) {
   const favoriteSet = new Set(favoriteIds);
@@ -111,12 +107,6 @@ export function SessionListPane({
             onChange={(event) => onFavoritesOnlyChange(event.currentTarget.checked)}
             size="sm"
             label="Favorites only"
-          />
-          <Switch
-            checked={showEmptySessions}
-            onChange={(event) => onShowEmptySessionsChange(event.currentTarget.checked)}
-            size="sm"
-            label="Show empty sessions"
           />
         </Stack>
       </Group>

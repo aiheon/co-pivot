@@ -8,7 +8,6 @@ import {loadSessions} from './sessionSource';
 
 const FAVORITES_KEY = 'co-pivot-favorite-session-ids';
 const FAVORITES_ONLY_KEY = 'co-pivot-favorites-only';
-const SHOW_EMPTY_SESSIONS_KEY = 'co-pivot-show-empty-sessions';
 const SORT_KEY = 'co-pivot-session-sort';
 const SEARCH_QUERY_KEY = 'co-pivot-session-search-query';
 const TITLE_OVERRIDES_KEY = 'co-pivot-session-title-overrides';
@@ -23,7 +22,6 @@ export function useSessionWorkspace() {
   ]);
   const [favoriteIds, setFavoriteIds] = useState<string[]>(() => readFavoriteIds());
   const [favoritesOnly, setFavoritesOnlyState] = useState<boolean>(() => readFavoritesOnly());
-  const [showEmptySessions, setShowEmptySessionsState] = useState<boolean>(() => readShowEmptySessions());
   const [sortOption, setSortOptionState] = useState<SessionSortOption>(() => readSortOption());
   const [searchQuery, setSearchQueryState] = useState<string>(() => readSearchQuery());
   const [titleOverrides, setTitleOverridesState] = useState<Record<string, string>>(() => readTitleOverrides());
@@ -45,15 +43,13 @@ export function useSessionWorkspace() {
     const sessionsWithTitles = baseSessions.map((session) => applyTitleOverride(session, titleOverrides));
     const sorted = [...sessionsWithTitles].sort((left, right) => compareSessions(left, right, sortOption));
     const favoriteSet = new Set(favoriteIds);
-    const visibleByMessageCount = showEmptySessions
-      ? sorted
-      : sorted.filter((session) => session.messageCount > 0);
+    const nonEmptySessions = sorted.filter((session) => session.messageCount > 0);
     const filteredByFavorites = favoritesOnly
-      ? visibleByMessageCount.filter((session) => favoriteSet.has(session.id))
-      : visibleByMessageCount;
+      ? nonEmptySessions.filter((session) => favoriteSet.has(session.id))
+      : nonEmptySessions;
 
     return rankSessionsByQuery(filteredByFavorites, searchQuery);
-  }, [baseSessions, favoriteIds, favoritesOnly, searchQuery, showEmptySessions, sortOption, titleOverrides]);
+  }, [baseSessions, favoriteIds, favoritesOnly, searchQuery, sortOption, titleOverrides]);
 
   const toggleFavorite = (sessionId: string) => {
     setFavoriteIds((current) => {
@@ -73,11 +69,6 @@ export function useSessionWorkspace() {
   const setFavoritesOnly = (value: boolean) => {
     setFavoritesOnlyState(value);
     localStorage.setItem(FAVORITES_ONLY_KEY, JSON.stringify(value));
-  };
-
-  const setShowEmptySessions = (value: boolean) => {
-    setShowEmptySessionsState(value);
-    localStorage.setItem(SHOW_EMPTY_SESSIONS_KEY, JSON.stringify(value));
   };
 
   const setSearchQuery = (value: string) => {
@@ -113,8 +104,6 @@ export function useSessionWorkspace() {
     toggleFavorite,
     favoritesOnly,
     setFavoritesOnly,
-    showEmptySessions,
-    setShowEmptySessions,
     sortOption,
     setSortOption,
     searchQuery,
@@ -141,14 +130,6 @@ function readFavoriteIds() {
 function readFavoritesOnly() {
   try {
     return JSON.parse(localStorage.getItem(FAVORITES_ONLY_KEY) ?? 'false') === true;
-  } catch {
-    return false;
-  }
-}
-
-function readShowEmptySessions() {
-  try {
-    return JSON.parse(localStorage.getItem(SHOW_EMPTY_SESSIONS_KEY) ?? 'false') === true;
   } catch {
     return false;
   }

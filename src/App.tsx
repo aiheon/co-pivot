@@ -47,8 +47,6 @@ export default function App() {
     toggleFavorite,
     favoritesOnly,
     setFavoritesOnly,
-    showEmptySessions,
-    setShowEmptySessions,
     sortOption,
     setSortOption,
     searchQuery,
@@ -99,8 +97,6 @@ export default function App() {
       onToggleFavorite={toggleFavorite}
       onFavoritesOnlyChange={setFavoritesOnly}
       onSearchQueryChange={setSearchQuery}
-      showEmptySessions={showEmptySessions}
-      onShowEmptySessionsChange={setShowEmptySessions}
       onSortChange={setSortOption}
     />
   );
