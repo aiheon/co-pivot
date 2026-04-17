@@ -51,6 +51,10 @@ export default function App() {
     setShowEmptySessions,
     sortOption,
     setSortOption,
+    searchQuery,
+    setSearchQuery,
+    setCustomTitle,
+    resetCustomTitle,
   } = useSessionWorkspace();
   const [splitView, setSplitView] = useState(true);
   const [preferredTerminal, setPreferredTerminalState] = useState<PreferredTerminal>('iterm');
@@ -88,11 +92,13 @@ export default function App() {
       activeIds={activeIds}
       favoriteIds={favoriteIds}
       favoritesOnly={favoritesOnly}
+      searchQuery={searchQuery}
       splitView={splitView}
       sortOption={sortOption}
       onSelectSession={(id) => setActiveIds((current) => nextActiveIds(current, id, splitView))}
       onToggleFavorite={toggleFavorite}
       onFavoritesOnlyChange={setFavoritesOnly}
+      onSearchQueryChange={setSearchQuery}
       showEmptySessions={showEmptySessions}
       onShowEmptySessionsChange={setShowEmptySessions}
       onSortChange={setSortOption}
@@ -205,6 +211,8 @@ export default function App() {
               preferredTerminal={preferredTerminal}
               sessions={activeSessions}
               splitView={splitView}
+              onSaveTitle={setCustomTitle}
+              onResetTitle={resetCustomTitle}
               onCloseSession={(id) => setActiveIds((current) => current.filter((activeId) => activeId !== id))}
             />
           </Box>

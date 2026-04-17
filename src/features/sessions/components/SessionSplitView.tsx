@@ -1,6 +1,8 @@
 import {useEffect, useRef, useState} from 'react';
 import {
+  ActionIcon,
   Alert,
+  Badge,
   Button,
   Card,
   Code,
@@ -10,8 +12,16 @@ import {
   SimpleGrid,
   Stack,
   Text,
+  TextInput,
 } from '@mantine/core';
-import {IconAlertCircle, IconPlayerPlay, IconX} from '@tabler/icons-react';
+import {
+  IconAlertCircle,
+  IconCheck,
+  IconEdit,
+  IconPlayerPlay,
+  IconRestore,
+  IconX,
+} from '@tabler/icons-react';
 import {
   resumeSession,
   type PreferredTerminal,
@@ -22,6 +32,8 @@ interface SessionSplitViewProps {
   preferredTerminal: PreferredTerminal;
   sessions: SessionSummary[];
   splitView: boolean;
+  onSaveTitle: (sessionId: string, title: string) => void;
+  onResetTitle: (sessionId: string) => void;
   onCloseSession: (id: string) => void;
 }
 
@@ -29,6 +41,8 @@ export function SessionSplitView({
   preferredTerminal,
   sessions,
   splitView,
+  onSaveTitle,
+  onResetTitle,
   onCloseSession,
 }: SessionSplitViewProps) {
   if (sessions.length === 0) {
@@ -45,6 +59,8 @@ export function SessionSplitView({
       <SessionPanel
         preferredTerminal={preferredTerminal}
         session={sessions[0]}
+        onSaveTitle={onSaveTitle}
+        onResetTitle={onResetTitle}
         onClose={() => onCloseSession(sessions[0].id)}
       />
     );
@@ -55,11 +71,15 @@ export function SessionSplitView({
       <SessionPanel
         preferredTerminal={preferredTerminal}
         session={sessions[0]}
+        onSaveTitle={onSaveTitle}
+        onResetTitle={onResetTitle}
         onClose={() => onCloseSession(sessions[0].id)}
       />
       <SessionPanel
         preferredTerminal={preferredTerminal}
         session={sessions[1]}
+        onSaveTitle={onSaveTitle}
+        onResetTitle={onResetTitle}
         onClose={() => onCloseSession(sessions[1].id)}
       />
     </SimpleGrid>
@@ -69,14 +89,20 @@ export function SessionSplitView({
 function SessionPanel({
   preferredTerminal,
   session,
+  onSaveTitle,
+  onResetTitle,
   onClose,
 }: {
   preferredTerminal: PreferredTerminal;
   session: SessionSummary;
+  onSaveTitle: (sessionId: string, title: string) => void;
+  onResetTitle: (sessionId: string) => void;
   onClose: () => void;
 }) {
   const [resumeError, setResumeError] = useState<string | null>(null);
   const [isResuming, setIsResuming] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState(session.title);
   const conversationViewportRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -87,6 +113,11 @@ function SessionPanel({
 
     viewport.scrollTop = viewport.scrollHeight;
   }, [session.id, session.messages.length]);
+
+  useEffect(() => {
+    setIsEditingTitle(false);
+    setTitleDraft(session.title);
+  }, [session.id, session.title]);
 
   const handleResume = async () => {
     setResumeError(null);
@@ -107,17 +138,85 @@ function SessionPanel({
     }
   };
 
+  const handleSaveTitle = () => {
+    onSaveTitle(session.id, titleDraft);
+    setIsEditingTitle(false);
+  };
+
+  const handleCancelTitleEdit = () => {
+    setTitleDraft(session.title);
+    setIsEditingTitle(false);
+  };
+
   return (
     <Card withBorder padding="lg" radius="xl" className="session-detail-card">
       <Stack gap="md" h="100%">
         <Group justify="space-between" align="flex-start">
-          <Stack gap={4}>
-            <Text fw={700} size="lg">
-              {session.title}
-            </Text>
+          <Stack gap={6} style={{flex: 1}}>
+            {isEditingTitle ? (
+              <Group gap="xs" wrap="nowrap" align="flex-start">
+                <TextInput
+                  value={titleDraft}
+                  onChange={(event) => setTitleDraft(event.currentTarget.value)}
+                  placeholder="Give this session a clearer title"
+                  style={{flex: 1}}
+                  autoFocus
+                />
+                <ActionIcon
+                  variant="light"
+                  color="teal"
+                  aria-label="Save custom title"
+                  onClick={handleSaveTitle}
+                >
+                  <IconCheck size={16} />
+                </ActionIcon>
+                <ActionIcon
+                  variant="light"
+                  color="gray"
+                  aria-label="Cancel title edit"
+                  onClick={handleCancelTitleEdit}
+                >
+                  <IconX size={16} />
+                </ActionIcon>
+              </Group>
+            ) : (
+              <Group gap="xs" align="center" wrap="wrap">
+                <Text fw={700} size="lg">
+                  {session.title}
+                </Text>
+                {session.hasCustomTitle ? (
+                  <Badge size="sm" variant="light" color="yellow">
+                    Custom title
+                  </Badge>
+                ) : null}
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  aria-label="Edit title"
+                  onClick={() => setIsEditingTitle(true)}
+                >
+                  <IconEdit size={16} />
+                </ActionIcon>
+                {session.hasCustomTitle ? (
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    aria-label="Reset custom title"
+                    onClick={() => onResetTitle(session.id)}
+                  >
+                    <IconRestore size={16} />
+                  </ActionIcon>
+                ) : null}
+              </Group>
+            )}
             <Text size="sm" c="dimmed">
               {session.workspacePath}
             </Text>
+            {session.hasCustomTitle && session.sourceTitle ? (
+              <Text size="xs" c="dimmed">
+                Original title: {session.sourceTitle}
+              </Text>
+            ) : null}
           </Stack>
 
           <Group gap="xs">

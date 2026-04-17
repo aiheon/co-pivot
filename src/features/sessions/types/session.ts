@@ -11,6 +11,8 @@ export interface SessionMessage {
 export interface SessionSummary {
   id: string;
   title: string;
+  sourceTitle?: string;
+  hasCustomTitle?: boolean;
   workspaceLabel: string;
   workspacePath: string;
   status: SessionStatus;

@@ -3,6 +3,7 @@ import {
   Badge,
   Box,
   Card,
+  CloseButton,
   Divider,
   Group,
   ScrollArea,
@@ -10,8 +11,9 @@ import {
   Stack,
   Switch,
   Text,
+  TextInput,
 } from '@mantine/core';
-import {IconStar, IconStarFilled} from '@tabler/icons-react';
+import {IconSearch, IconStar, IconStarFilled} from '@tabler/icons-react';
 import type {
   SessionSortOption,
   SessionSummary,
@@ -22,12 +24,14 @@ interface SessionListPaneProps {
   activeIds: string[];
   favoriteIds: string[];
   favoritesOnly: boolean;
+  searchQuery: string;
   showEmptySessions: boolean;
   splitView: boolean;
   sortOption: SessionSortOption;
   onSelectSession: (id: string) => void;
   onToggleFavorite: (id: string) => void;
   onFavoritesOnlyChange: (value: boolean) => void;
+  onSearchQueryChange: (value: string) => void;
   onShowEmptySessionsChange: (value: boolean) => void;
   onSortChange: (option: SessionSortOption) => void;
 }
@@ -37,12 +41,14 @@ export function SessionListPane({
   activeIds,
   favoriteIds,
   favoritesOnly,
+  searchQuery,
   showEmptySessions,
   splitView,
   sortOption,
   onSelectSession,
   onToggleFavorite,
   onFavoritesOnlyChange,
+  onSearchQueryChange,
   onShowEmptySessionsChange,
   onSortChange,
 }: SessionListPaneProps) {
@@ -70,6 +76,21 @@ export function SessionListPane({
           {label: 'Oldest', value: 'oldest'},
           {label: 'Workspace', value: 'workspace'},
         ]}
+      />
+
+      <TextInput
+        value={searchQuery}
+        onChange={(event) => onSearchQueryChange(event.currentTarget.value)}
+        placeholder="Search title, workspace, branch, tags, transcript..."
+        leftSection={<IconSearch size={16} />}
+        rightSection={
+          searchQuery ? (
+            <CloseButton
+              aria-label="Clear search"
+              onClick={() => onSearchQueryChange('')}
+            />
+          ) : null
+        }
       />
 
       <Group justify="space-between" align="flex-start">
@@ -142,9 +163,19 @@ export function SessionListPane({
 
           {sessions.length === 0 ? (
             <Card withBorder radius="lg" padding="lg">
-              <Text fw={600}>No favorite sessions yet</Text>
+              <Text fw={600}>
+                {searchQuery
+                  ? 'No sessions match this search'
+                  : favoritesOnly
+                    ? 'No favorite sessions yet'
+                    : 'No sessions to show'}
+              </Text>
               <Text size="sm" c="dimmed">
-                Star a session to keep it in your favorites list.
+                {searchQuery
+                  ? 'Try a broader keyword or clear the search field.'
+                  : favoritesOnly
+                    ? 'Star a session to keep it in your favorites list.'
+                    : 'Try changing the filters or refreshing the local session list.'}
               </Text>
             </Card>
           ) : null}
