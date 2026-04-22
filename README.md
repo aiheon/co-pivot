@@ -8,19 +8,12 @@ co-pivot is a local-first desktop app for browsing GitHub Copilot CLI sessions, 
 
 ## What it does today
 
-- Runs as a desktop app with `Electron + React + Mantine`
-- Reads local GitHub Copilot CLI sessions from `~/.copilot/session-state`
-- Lists sessions with status, workspace, transcript previews, favorites, sorting, and a `favorites only` filter
-- Supports a free split view for comparing two sessions side by side
-- Shows conversations in a chat-style view built for resuming context quickly
-- Lets you close a session pane without affecting the underlying Copilot session
-- Opens `iTerm` or `Terminal.app` with `copilot --resume <session-id>` when you click `Resume`
-- Lets you choose the preferred terminal in the app, with the choice persisted locally
-- Supports dark and light themes, with dark mode enabled by default
-- Uses a Gruvbox-inspired palette for the UI and transcript view
-- Shows a clear in-app error if the `copilot` command is not available
-- Falls back to mock data when the UI runs outside Electron
-- Quits the Electron process when the last window closes
+- Runs as a local desktop app built with `Electron + React + Mantine`
+- Reads GitHub Copilot CLI sessions from `~/.copilot/session-state`
+- Helps you browse, search, and identify the right conversation to resume
+- Supports favorites, chronological browsing, and side-by-side comparison
+- Shows session transcripts in a chat-style view optimized for quick context recovery
+- Reopens the selected session in `iTerm` or `Terminal.app` with `copilot --resume <session-id>`
 
 ## Current architecture
 
@@ -101,9 +94,3 @@ If macOS blocks the first launch, right-click the app, choose `Open`, then confi
 - The switchboard UI is intentionally minimal and optimized for browsing, comparing, and resuming sessions quickly.
 - The preferred terminal is stored locally in Electron user data.
 - The packaged macOS app targets Apple Silicon (`arm64`).
-
-## Next steps
-
-1. Improve session status and preview derivation from richer event data
-2. Explore richer multi-session workflows after the core actions feel solid
-3. Add signing and notarization for smoother macOS distribution
