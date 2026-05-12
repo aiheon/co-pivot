@@ -193,8 +193,8 @@ function SessionPanel({
   return (
     <Card withBorder padding="lg" radius="xl" className="session-detail-card">
       <Stack gap="md" h="100%">
-        <Group justify="space-between" align="flex-start">
-          <Stack gap={6} style={{flex: 1}}>
+        <Group align="flex-start" wrap="nowrap" className="session-header-grid">
+          <Stack gap={6} className="session-header-primary">
             {isEditingTitle ? (
               <Group gap="xs" wrap="nowrap" align="flex-start">
                 <TextInput
@@ -259,9 +259,21 @@ function SessionPanel({
                 Original title: {session.sourceTitle}
               </Text>
             ) : null}
+            <Group gap="xs" wrap="wrap">
+              <Code>{session.id}</Code>
+              <Code>{session.status}</Code>
+              <Code>{preferredTerminal === 'iterm' ? 'iTerm' : 'Terminal'}</Code>
+            </Group>
+            {session.branch ? <Code w="fit-content">{session.branch}</Code> : null}
           </Stack>
 
-          <Group gap="xs">
+          <Stack gap="xs" className="session-header-metrics">
+            <Metric label="Started" value={formatDate(session.startedAt)} />
+            <Metric label="Updated" value={formatDate(session.updatedAt)} />
+            <Metric label="Messages" value={String(session.messageCount)} />
+          </Stack>
+
+          <Group gap="xs" wrap="nowrap" align="flex-start" className="session-header-actions">
             <Button
               variant="default"
               size="xs"
@@ -286,21 +298,6 @@ function SessionPanel({
             {resumeError}
           </Alert>
         ) : null}
-
-        <Group gap="xs">
-          <Code>{session.id}</Code>
-          {session.branch ? <Code>{session.branch}</Code> : null}
-          <Code>{session.status}</Code>
-          <Code>{preferredTerminal === 'iterm' ? 'iTerm' : 'Terminal'}</Code>
-        </Group>
-
-        <Divider />
-
-        <Group justify="space-between">
-          <Metric label="Started" value={formatDate(session.startedAt)} />
-          <Metric label="Updated" value={formatDate(session.updatedAt)} />
-          <Metric label="Messages" value={String(session.messageCount)} />
-        </Group>
 
         <Divider />
 

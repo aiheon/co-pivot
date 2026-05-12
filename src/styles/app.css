@@ -229,6 +229,26 @@ body {
   line-height: 1.45;
 }
 
+.session-header-grid {
+  gap: 1rem;
+}
+
+.session-header-primary {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.session-header-metrics {
+  flex: 0 0 auto;
+  min-width: max-content;
+}
+
+.session-header-actions {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  margin-left: 2.5rem;
+}
+
 :root[data-mantine-color-scheme='dark'] .resume-note-shell {
   border-color: rgba(131, 165, 152, 0.24);
   background: linear-gradient(180deg, rgba(42, 57, 59, 0.92), rgba(34, 49, 51, 0.94));
