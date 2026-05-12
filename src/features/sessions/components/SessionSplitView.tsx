@@ -17,6 +17,7 @@ import {
   TextInput,
 } from '@mantine/core';
 import {
+  IconArrowDown,
   IconAlertCircle,
   IconCheck,
   IconEdit,
@@ -29,6 +30,7 @@ import {
   type PreferredTerminal,
 } from '@/features/sessions/lib/sessionSource';
 import type {SessionResumeNoteSource, SessionSummary} from '@/features/sessions/types/session';
+import {useScrollIntoView} from '@mantine/hooks';
 
 interface SessionSplitViewProps {
   preferredTerminal: PreferredTerminal;
@@ -124,20 +126,57 @@ function SessionPanel({
 }) {
   const [resumeError, setResumeError] = useState<string | null>(null);
   const [isResuming, setIsResuming] = useState(false);
+  const [showScrollToLatest, setShowScrollToLatest] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(session.title);
   const [isEditingResumeNote, setIsEditingResumeNote] = useState(false);
   const [resumeNoteDraft, setResumeNoteDraft] = useState(session.resumeNote ?? '');
-  const conversationViewportRef = useRef<HTMLDivElement | null>(null);
+  const shouldStickToBottomRef = useRef(true);
+  const {scrollIntoView, scrollableRef, targetRef} = useScrollIntoView<HTMLDivElement, HTMLDivElement>({
+    duration: 250,
+    axis: 'y',
+    offset: 0,
+  });
 
   useEffect(() => {
-    const viewport = conversationViewportRef.current;
+    const viewport = scrollableRef.current;
     if (!viewport) {
       return;
     }
 
-    viewport.scrollTop = viewport.scrollHeight;
-  }, [session.id, session.messages.length]);
+    scrollIntoView({alignment: 'end'});
+    shouldStickToBottomRef.current = true;
+    setShowScrollToLatest(false);
+  }, [scrollIntoView, scrollableRef, session.id]);
+
+  useEffect(() => {
+    const viewport = scrollableRef.current;
+    if (!viewport || !shouldStickToBottomRef.current) {
+      return;
+    }
+
+    scrollIntoView({alignment: 'end'});
+  }, [scrollIntoView, scrollableRef, session.messages.length]);
+
+  useEffect(() => {
+    const viewport = scrollableRef.current;
+    if (!viewport) {
+      return;
+    }
+
+    const syncScrollState = () => {
+      const nearBottom = isViewportNearBottom(viewport);
+      shouldStickToBottomRef.current = nearBottom;
+      setShowScrollToLatest(!nearBottom);
+    };
+
+    syncScrollState();
+    viewport.addEventListener('scroll', syncScrollState);
+
+    return () => {
+      viewport.removeEventListener('scroll', syncScrollState);
+    };
+  }, [scrollableRef, session.id]);
 
   useEffect(() => {
     setIsEditingTitle(false);
@@ -188,6 +227,20 @@ function SessionPanel({
   const handleCancelResumeNoteEdit = () => {
     setResumeNoteDraft(session.resumeNote ?? '');
     setIsEditingResumeNote(false);
+  };
+
+  const handleScrollToLatest = () => {
+    scrollIntoView({alignment: 'end'});
+    requestAnimationFrame(() => {
+      const viewport = scrollableRef.current;
+      if (!viewport) {
+        return;
+      }
+
+      viewport.scrollTop = viewport.scrollHeight;
+      shouldStickToBottomRef.current = true;
+      setShowScrollToLatest(false);
+    });
   };
 
   return (
@@ -392,44 +445,63 @@ function SessionPanel({
 
         <Stack gap="xs" style={{flex: 1, minHeight: 0}}>
           <Card withBorder radius="lg" padding="md" className="conversation-shell" style={{flex: 1, minHeight: 0}}>
-            <ScrollArea
-              h="100%"
-              offsetScrollbars
-              scrollbarSize={6}
-              viewportRef={conversationViewportRef}
-            >
-              <Stack gap="sm" className="conversation-log">
-                {session.messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={
-                      message.role === 'user'
-                        ? 'conversation-entry conversation-entry-user'
-                        : 'conversation-entry conversation-entry-assistant'
-                    }
-                  >
-                    <div className="conversation-entry-header">
-                      <span
-                        className={
-                          message.role === 'user'
-                            ? 'conversation-role conversation-role-user'
-                            : 'conversation-role conversation-role-assistant'
-                        }
-                      >
-                        {message.role === 'user' ? 'You' : 'Copilot'}
-                      </span>
-                      <span className="conversation-time">{formatTimestamp(message.createdAt)}</span>
+            <div className="conversation-scroll-shell">
+              <ScrollArea
+                h="100%"
+                offsetScrollbars
+                scrollbarSize={6}
+                viewportRef={scrollableRef}
+              >
+                <Stack gap="sm" className="conversation-log">
+                  {session.messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={
+                        message.role === 'user'
+                          ? 'conversation-entry conversation-entry-user'
+                          : 'conversation-entry conversation-entry-assistant'
+                      }
+                    >
+                      <div className="conversation-entry-header">
+                        <span
+                          className={
+                            message.role === 'user'
+                              ? 'conversation-role conversation-role-user'
+                              : 'conversation-role conversation-role-assistant'
+                          }
+                        >
+                          {message.role === 'user' ? 'You' : 'Copilot'}
+                        </span>
+                        <span className="conversation-time">{formatTimestamp(message.createdAt)}</span>
+                      </div>
+                      <pre className="conversation-message">{message.text}</pre>
                     </div>
-                    <pre className="conversation-message">{message.text}</pre>
-                  </div>
-                ))}
-              </Stack>
-            </ScrollArea>
+                  ))}
+                  <div ref={targetRef} className="conversation-bottom-anchor" />
+                </Stack>
+              </ScrollArea>
+
+              {showScrollToLatest ? (
+                <Button
+                  className="conversation-scroll-to-latest"
+                  size="xs"
+                  radius="xl"
+                  leftSection={<IconArrowDown size={14} />}
+                  onClick={handleScrollToLatest}
+                >
+                  Latest
+                </Button>
+              ) : null}
+            </div>
           </Card>
         </Stack>
       </Stack>
     </Card>
   );
+}
+
+function isViewportNearBottom(viewport: HTMLDivElement, threshold = 48) {
+  return viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight <= threshold;
 }
 
 function StructuredResumeNote({note}: {note: string}) {
