@@ -77,7 +77,7 @@ export function SessionListPane({
       <TextInput
         value={searchQuery}
         onChange={(event) => onSearchQueryChange(event.currentTarget.value)}
-        placeholder="Search title, workspace, branch, tags, transcript..."
+        placeholder="Search conversations, repos, branches, tags, and context..."
         leftSection={<IconSearch size={16} />}
         rightSection={
           searchQuery ? (
@@ -162,7 +162,7 @@ export function SessionListPane({
               </Text>
               <Text size="sm" c="dimmed">
                 {searchQuery
-                  ? 'Try a broader keyword or clear the search field.'
+                  ? 'Try a shorter query, a repo or branch name, or clear the search field.'
                   : favoritesOnly
                     ? 'Star a session to keep it in your favorites list.'
                     : 'Try changing the filters or refreshing the local session list.'}
@@ -197,7 +197,7 @@ function SessionListCard({
       <Stack gap="sm">
         <Group justify="space-between" align="flex-start" wrap="nowrap">
           <Box maw="78%">
-            <Text fw={600}>{session.title}</Text>
+            <HighlightedTitle title={session.title} searchTerms={session.searchMatch?.terms ?? []} />
             <Text size="sm" c="dimmed" truncate>
               {session.workspaceLabel}
             </Text>
@@ -258,6 +258,34 @@ function groupSessionsByDate(sessions: SessionSummary[]) {
   }));
 }
 
+function HighlightedTitle({
+  title,
+  searchTerms,
+}: {
+  title: string;
+  searchTerms: string[];
+}) {
+  const segments = highlightText(title, searchTerms);
+
+  if (segments.length === 1 && !segments[0].highlighted) {
+    return <Text fw={600}>{title}</Text>;
+  }
+
+  return (
+    <Text fw={600}>
+      {segments.map((segment, index) => (
+        <Text
+          key={`${segment.text}-${index}`}
+          span
+          className={segment.highlighted ? 'session-search-highlight' : undefined}
+        >
+          {segment.text}
+        </Text>
+      ))}
+    </Text>
+  );
+}
+
 function toDateKey(value: string) {
   const date = new Date(value);
   const year = date.getFullYear();
@@ -291,6 +319,32 @@ function formatDateGroupLabel(dateKey: string) {
   })
     .format(target)
     .toUpperCase();
+}
+
+function highlightText(text: string, searchTerms: string[]) {
+  const terms = searchTerms
+    .map((term) => term.trim())
+    .filter((term) => term.length > 1);
+
+  if (terms.length === 0) {
+    return [{text, highlighted: false}];
+  }
+
+  const pattern = new RegExp(`(${terms.map(escapeRegExp).join('|')})`, 'ig');
+  const parts = text.split(pattern).filter((part) => part.length > 0);
+
+  if (parts.length === 0) {
+    return [{text, highlighted: false}];
+  }
+
+  return parts.map((part) => ({
+    text: part,
+    highlighted: terms.some((term) => part.toLocaleLowerCase() === term.toLocaleLowerCase()),
+  }));
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function formatListTimestamp(value: string) {

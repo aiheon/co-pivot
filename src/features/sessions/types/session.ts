@@ -8,11 +8,18 @@ export interface SessionMessage {
   createdAt: string;
 }
 
+export interface SessionSearchMatch {
+  matchedFields: Array<'title' | 'sourceTitle' | 'workspace' | 'branch' | 'tags' | 'snippet' | 'transcript' | 'id' | 'status'>;
+  terms: string[];
+  score: number;
+}
+
 export interface SessionSummary {
   id: string;
   title: string;
   sourceTitle?: string;
   hasCustomTitle?: boolean;
+  searchMatch?: SessionSearchMatch;
   workspaceLabel: string;
   workspacePath: string;
   status: SessionStatus;

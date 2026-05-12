@@ -132,6 +132,11 @@ body {
   transform: translateY(-1px);
 }
 
+.session-search-highlight {
+  border-radius: 0.35rem;
+  padding-inline: 0.12rem;
+}
+
 .session-date-group + .session-date-group {
   margin-top: 0.45rem;
 }
@@ -165,8 +170,18 @@ body {
   border-color: rgba(142, 192, 124, 0.35);
 }
 
+:root[data-mantine-color-scheme='dark'] .session-search-highlight {
+  background: rgba(250, 189, 47, 0.22);
+  color: var(--gb-fg0);
+}
+
 :root[data-mantine-color-scheme='light'] .session-card:hover {
   border-color: rgba(66, 123, 88, 0.3);
+}
+
+:root[data-mantine-color-scheme='light'] .session-search-highlight {
+  background: rgba(181, 118, 20, 0.18);
+  color: var(--gb-fg0);
 }
 
 :root[data-mantine-color-scheme='dark'] .session-card.active {
