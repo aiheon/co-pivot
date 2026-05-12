@@ -5,10 +5,11 @@ const os = require('node:os');
 const {execFileSync} = require('node:child_process');
 const yaml = require('js-yaml');
 
-const DEV_SERVER_URL = 'http://localhost:1420';
+const DEV_SERVER_PORT = process.env.CO_PIVOT_DEV_PORT || '1420';
+const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
 const SESSION_ROOT = path.join(os.homedir(), '.copilot', 'session-state');
 const PREFERENCES_PATH = path.join(app.getPath('userData'), 'preferences.json');
-const DEFAULT_TERMINAL = 'iterm';
+const DEFAULT_TERMINAL = 'terminal';
 
 function createWindow() {
   const mainWindow = new BrowserWindow({

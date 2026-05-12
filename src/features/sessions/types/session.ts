@@ -40,4 +40,5 @@ export interface SessionSummary {
 export interface SessionSourceResult {
   mode: 'mock' | 'local';
   sessions: SessionSummary[];
+  error?: string;
 }

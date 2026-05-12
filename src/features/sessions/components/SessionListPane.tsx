@@ -24,6 +24,8 @@ interface SessionListPaneProps {
   activeIds: string[];
   favoriteIds: string[];
   favoritesOnly: boolean;
+  mode: 'mock' | 'local';
+  loadError: string | null;
   searchQuery: string;
   splitView: boolean;
   sortOption: SessionSortOption;
@@ -39,6 +41,8 @@ export function SessionListPane({
   activeIds,
   favoriteIds,
   favoritesOnly,
+  mode,
+  loadError,
   searchQuery,
   splitView,
   sortOption,
@@ -153,19 +157,9 @@ export function SessionListPane({
 
           {sessions.length === 0 ? (
             <Card withBorder radius="lg" padding="lg">
-              <Text fw={600}>
-                {searchQuery
-                  ? 'No sessions match this search'
-                  : favoritesOnly
-                    ? 'No favorite sessions yet'
-                    : 'No sessions to show'}
-              </Text>
+              <Text fw={600}>{getEmptyStateTitle({searchQuery, favoritesOnly, mode, loadError})}</Text>
               <Text size="sm" c="dimmed">
-                {searchQuery
-                  ? 'Try a shorter query, a repo or branch name, or clear the search field.'
-                  : favoritesOnly
-                    ? 'Star a session to keep it in your favorites list.'
-                    : 'Try changing the filters or refreshing the local session list.'}
+                {getEmptyStateDescription({searchQuery, favoritesOnly, mode, loadError})}
               </Text>
             </Card>
           ) : null}
@@ -240,6 +234,66 @@ const statusColor = {
   closed: 'gray',
   stale: 'red',
 } as const;
+
+function getEmptyStateTitle({
+  searchQuery,
+  favoritesOnly,
+  mode,
+  loadError,
+}: {
+  searchQuery: string;
+  favoritesOnly: boolean;
+  mode: 'mock' | 'local';
+  loadError: string | null;
+}) {
+  if (searchQuery) {
+    return 'No sessions match this search';
+  }
+
+  if (favoritesOnly) {
+    return 'No favorite sessions yet';
+  }
+
+  if (loadError) {
+    return 'Could not load local sessions';
+  }
+
+  if (mode === 'mock') {
+    return 'Preview mode';
+  }
+
+  return 'No local Copilot sessions found';
+}
+
+function getEmptyStateDescription({
+  searchQuery,
+  favoritesOnly,
+  mode,
+  loadError,
+}: {
+  searchQuery: string;
+  favoritesOnly: boolean;
+  mode: 'mock' | 'local';
+  loadError: string | null;
+}) {
+  if (searchQuery) {
+    return 'Try a shorter query, a repo or branch name, or clear the search field.';
+  }
+
+  if (favoritesOnly) {
+    return 'Star a session to keep it in your favorites list.';
+  }
+
+  if (loadError) {
+    return `${loadError} Try refreshing the app.`;
+  }
+
+  if (mode === 'mock') {
+    return 'Electron is not connected, so the app is showing preview data instead of local Copilot history.';
+  }
+
+  return 'Run a few GitHub Copilot CLI conversations first, then refresh. co-pivot reads them from ~/.copilot/session-state.';
+}
 
 function groupSessionsByDate(sessions: SessionSummary[]) {
   const groups = new Map<string, SessionSummary[]>();

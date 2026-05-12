@@ -13,6 +13,7 @@ co-pivot is a local-first desktop app for finding, understanding, and resuming G
 - Helps you browse, search, and identify the right conversation to resume across parallel tasks
 - Supports custom titles, favorites, chronological browsing, and side-by-side comparison
 - Adds lightweight recovery aids like resume notes, richer session detail, and chat-style transcript browsing
+- Shows a clear local empty state when no Copilot sessions are available yet
 - Reopens the selected session in `iTerm` or `Terminal.app` with `copilot --resume <session-id>`
 
 ## Current architecture
@@ -43,6 +44,18 @@ bun run dev
 ```
 
 This starts Vite and Electron together.
+
+If you need a different local port, set `CO_PIVOT_DEV_PORT` before running the app.
+
+### First-run checklist
+
+Before expecting local Copilot history to appear in the app:
+
+- Install GitHub Copilot CLI: https://docs.github.com/copilot/how-tos/set-up/install-copilot-cli
+- Authenticate once by running `copilot` in a terminal and completing `/login`
+- Start at least one real Copilot CLI conversation so `~/.copilot/session-state` exists
+- Run `bun run dev`
+- If you want `Resume` to open in `iTerm`, install `iTerm`; otherwise the app defaults to `Terminal`
 
 ### Type-check
 
@@ -92,6 +105,7 @@ If macOS blocks the first launch, right-click the app, choose `Open`, then confi
 - Session discovery is based on the local Copilot session-state format, so we should expect that format to evolve over time.
 - `Resume` opens a new terminal window/tab and keeps co-pivot open.
 - The UI is intentionally optimized for fast task recovery: finding the right conversation, understanding where it left off, and resuming it quickly.
-- The preferred terminal is stored locally in Electron user data.
+- The preferred terminal is stored locally in Electron user data and defaults to `Terminal`.
 - Session-specific helpers like custom titles and resume notes are stored locally.
+- Outside Electron, the app falls back to preview data. Inside Electron, it reads your real local Copilot history or shows an explicit empty state.
 - The packaged macOS app targets Apple Silicon (`arm64`).

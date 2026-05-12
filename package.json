@@ -6,8 +6,8 @@
   "main": "electron/main.cjs",
   "scripts": {
     "dev": "concurrently -k \"bun run dev:web\" \"bun run dev:electron\"",
-    "dev:web": "vite",
-    "dev:electron": "wait-on tcp:1420 && electron .",
+    "dev:web": "vite --strictPort --port ${CO_PIVOT_DEV_PORT:-1420}",
+    "dev:electron": "wait-on tcp:${CO_PIVOT_DEV_PORT:-1420} && electron .",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit",

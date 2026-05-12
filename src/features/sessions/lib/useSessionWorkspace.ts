@@ -2,6 +2,7 @@ import {useEffect, useMemo, useRef, useState} from 'react';
 import type {
   SessionSortOption,
   SessionResumeNoteSource,
+  SessionSourceResult,
   SessionSummary,
 } from '@/features/sessions/types/session';
 import {mockSessions} from './mockSessions';
@@ -24,13 +25,13 @@ interface ResumeNoteEntry {
 }
 
 export function useSessionWorkspace() {
-  const [baseSessions, setBaseSessions] = useState<SessionSummary[]>(mockSessions);
-  const [mode, setMode] = useState<'mock' | 'local'>('mock');
+  const [baseSessions, setBaseSessions] = useState<SessionSummary[]>([]);
+  const [mode, setMode] = useState<SessionSourceResult['mode']>(() =>
+    typeof window !== 'undefined' && window.coPivot ? 'local' : 'mock',
+  );
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeIds, setActiveIds] = useState<string[]>([
-    mockSessions[0].id,
-    mockSessions[1].id,
-  ]);
+  const [activeIds, setActiveIds] = useState<string[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<string[]>(() => readFavoriteIds());
   const [favoritesOnly, setFavoritesOnlyState] = useState<boolean>(() => readFavoritesOnly());
   const [sortOption, setSortOptionState] = useState<SessionSortOption>(() => readSortOption());
@@ -52,8 +53,9 @@ export function useSessionWorkspace() {
 
     try {
       const result = await loadSessions();
-      setMode(result.sessions.length > 0 ? result.mode : 'mock');
-      setBaseSessions(result.sessions.length > 0 ? result.sessions : mockSessions);
+      setMode(result.mode);
+      setLoadError(result.error ?? null);
+      setBaseSessions(result.sessions);
     } finally {
       refreshInFlightRef.current = false;
       if (!silent) {
@@ -92,6 +94,18 @@ export function useSessionWorkspace() {
       window.removeEventListener('focus', handleWindowFocus);
     };
   }, []);
+
+  useEffect(() => {
+    setActiveIds((current) => {
+      const validIds = current.filter((id) => baseSessions.some((session) => session.id === id));
+
+      if (validIds.length > 0 || baseSessions.length === 0) {
+        return validIds;
+      }
+
+      return baseSessions.slice(0, 2).map((session) => session.id);
+    });
+  }, [baseSessions]);
 
   const sessions = useMemo(() => {
     const sessionsWithTitles = baseSessions.map((session) => applyTitleOverride(session, titleOverrides));
@@ -196,6 +210,7 @@ export function useSessionWorkspace() {
   return {
     sessions,
     mode,
+    loadError,
     isLoading,
     refresh,
     activeIds,

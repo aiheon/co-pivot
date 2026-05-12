@@ -27,13 +27,14 @@ export async function loadSessions(): Promise<SessionSourceResult> {
     const sessions = await window.coPivot.listSessions();
 
     return {
-      mode: sessions.length > 0 ? 'local' : 'mock',
-      sessions: sessions.length > 0 ? sessions : mockSessions,
+      mode: 'local',
+      sessions,
     };
   } catch {
     return {
-      mode: 'mock',
-      sessions: mockSessions,
+      mode: 'local',
+      sessions: [],
+      error: 'Unable to read local Copilot sessions.',
     };
   }
 }
@@ -48,13 +49,13 @@ export async function resumeSession(sessionId: string, terminal: PreferredTermin
 
 export async function getPreferredTerminal(): Promise<PreferredTerminal> {
   if (!window.coPivot) {
-    return 'iterm';
+    return 'terminal';
   }
 
   try {
     return await window.coPivot.getPreferredTerminal();
   } catch {
-    return 'iterm';
+    return 'terminal';
   }
 }
 

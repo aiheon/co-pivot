@@ -41,6 +41,7 @@ export default function App() {
     refresh,
     isLoading,
     mode,
+    loadError,
     activeIds,
     setActiveIds,
     favoriteIds,
@@ -58,7 +59,7 @@ export default function App() {
     generateResumeNote,
   } = useSessionWorkspace();
   const [splitView, setSplitView] = useState(true);
-  const [preferredTerminal, setPreferredTerminalState] = useState<PreferredTerminal>('iterm');
+  const [preferredTerminal, setPreferredTerminalState] = useState<PreferredTerminal>('terminal');
   const [sessionPaneSide, setSessionPaneSide] = useState<SessionPaneSide>(() => readSessionPaneSide());
 
   useEffect(() => {
@@ -93,6 +94,8 @@ export default function App() {
       activeIds={activeIds}
       favoriteIds={favoriteIds}
       favoritesOnly={favoritesOnly}
+      mode={mode}
+      loadError={loadError}
       searchQuery={searchQuery}
       splitView={splitView}
       sortOption={sortOption}
