@@ -4,23 +4,23 @@
   <img src="docs/assets/co-pivot-icon.png" alt="co-pivot app icon" width="250" />
 </p>
 
-co-pivot is a local-first desktop app for browsing GitHub Copilot CLI sessions, comparing them side by side, and resuming the right conversation quickly.
+co-pivot is a local-first desktop app for finding, understanding, and resuming GitHub Copilot CLI conversations with less friction.
 
 ## What it does today
 
 - Runs as a local desktop app built with `Electron + React + Mantine`
 - Reads GitHub Copilot CLI sessions from `~/.copilot/session-state`
-- Helps you browse, search, and identify the right conversation to resume
-- Supports favorites, chronological browsing, and side-by-side comparison
-- Shows session transcripts in a chat-style view optimized for quick context recovery
+- Helps you browse, search, and identify the right conversation to resume across parallel tasks
+- Supports custom titles, favorites, chronological browsing, and side-by-side comparison
+- Adds lightweight recovery aids like resume notes, richer session detail, and chat-style transcript browsing
 - Reopens the selected session in `iTerm` or `Terminal.app` with `copilot --resume <session-id>`
 
 ## Current architecture
 
-- `src/`: React UI and session browsing experience
-- `electron/main.cjs`: Electron main process, local session discovery, terminal preference persistence, and resume action
+- `src/`: React UI, local search, session detail views, and recovery workflows
+- `electron/main.cjs`: Electron main process, local session discovery, terminal preference persistence, periodic refresh wiring, and resume action
 - `electron/preload.cjs`: secure bridge between Electron and the renderer
-- `src/features/sessions/`: session models, mock data, loading logic, favorites, sorting, and resume wiring
+- `src/features/sessions/`: session models, search ranking, local metadata, notes, sorting, and resume wiring
 
 ## Local development
 
@@ -91,6 +91,7 @@ If macOS blocks the first launch, right-click the app, choose `Open`, then confi
 - co-pivot currently targets GitHub Copilot CLI only.
 - Session discovery is based on the local Copilot session-state format, so we should expect that format to evolve over time.
 - `Resume` opens a new terminal window/tab and keeps co-pivot open.
-- The switchboard UI is intentionally minimal and optimized for browsing, comparing, and resuming sessions quickly.
+- The UI is intentionally optimized for fast task recovery: finding the right conversation, understanding where it left off, and resuming it quickly.
 - The preferred terminal is stored locally in Electron user data.
+- Session-specific helpers like custom titles and resume notes are stored locally.
 - The packaged macOS app targets Apple Silicon (`arm64`).
