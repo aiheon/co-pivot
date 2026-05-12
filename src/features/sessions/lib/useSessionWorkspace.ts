@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import type {
   SessionSortOption,
   SessionSummary,
@@ -12,6 +12,7 @@ const FAVORITES_ONLY_KEY = 'co-pivot-favorites-only';
 const SORT_KEY = 'co-pivot-session-sort';
 const SEARCH_QUERY_KEY = 'co-pivot-session-search-query';
 const TITLE_OVERRIDES_KEY = 'co-pivot-session-title-overrides';
+const AUTO_REFRESH_INTERVAL_MS = 30_000;
 
 export function useSessionWorkspace() {
   const [baseSessions, setBaseSessions] = useState<SessionSummary[]>(mockSessions);
@@ -26,18 +27,60 @@ export function useSessionWorkspace() {
   const [sortOption, setSortOptionState] = useState<SessionSortOption>(() => readSortOption());
   const [searchQuery, setSearchQueryState] = useState<string>(() => readSearchQuery());
   const [titleOverrides, setTitleOverridesState] = useState<Record<string, string>>(() => readTitleOverrides());
+  const refreshInFlightRef = useRef(false);
 
-  const refresh = async () => {
-    setIsLoading(true);
+  const refresh = async ({silent = false}: {silent?: boolean} = {}) => {
+    if (refreshInFlightRef.current) {
+      return;
+    }
 
-    const result = await loadSessions();
-    setMode(result.sessions.length > 0 ? result.mode : 'mock');
-    setBaseSessions(result.sessions.length > 0 ? result.sessions : mockSessions);
-    setIsLoading(false);
+    refreshInFlightRef.current = true;
+
+    if (!silent) {
+      setIsLoading(true);
+    }
+
+    try {
+      const result = await loadSessions();
+      setMode(result.sessions.length > 0 ? result.mode : 'mock');
+      setBaseSessions(result.sessions.length > 0 ? result.sessions : mockSessions);
+    } finally {
+      refreshInFlightRef.current = false;
+      if (!silent) {
+        setIsLoading(false);
+      }
+    }
   };
 
   useEffect(() => {
     void refresh();
+  }, []);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        void refresh({silent: true});
+      }
+    }, AUTO_REFRESH_INTERVAL_MS);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void refresh({silent: true});
+      }
+    };
+
+    const handleWindowFocus = () => {
+      void refresh({silent: true});
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleWindowFocus);
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleWindowFocus);
+    };
   }, []);
 
   const sessions = useMemo(() => {
