@@ -8,9 +8,11 @@ import {
   Code,
   Divider,
   Group,
+  ScrollAreaAutosize,
   ScrollArea,
   SimpleGrid,
   Stack,
+  Textarea,
   Text,
   TextInput,
 } from '@mantine/core';
@@ -26,7 +28,7 @@ import {
   resumeSession,
   type PreferredTerminal,
 } from '@/features/sessions/lib/sessionSource';
-import type {SessionSummary} from '@/features/sessions/types/session';
+import type {SessionResumeNoteSource, SessionSummary} from '@/features/sessions/types/session';
 
 interface SessionSplitViewProps {
   preferredTerminal: PreferredTerminal;
@@ -34,6 +36,9 @@ interface SessionSplitViewProps {
   splitView: boolean;
   onSaveTitle: (sessionId: string, title: string) => void;
   onResetTitle: (sessionId: string) => void;
+  onSaveResumeNote: (sessionId: string, note: string, source?: SessionResumeNoteSource) => void;
+  onClearResumeNote: (sessionId: string) => void;
+  onGenerateResumeNote: (sessionId: string) => void;
   onCloseSession: (id: string) => void;
 }
 
@@ -43,6 +48,9 @@ export function SessionSplitView({
   splitView,
   onSaveTitle,
   onResetTitle,
+  onSaveResumeNote,
+  onClearResumeNote,
+  onGenerateResumeNote,
   onCloseSession,
 }: SessionSplitViewProps) {
   if (sessions.length === 0) {
@@ -61,6 +69,9 @@ export function SessionSplitView({
         session={sessions[0]}
         onSaveTitle={onSaveTitle}
         onResetTitle={onResetTitle}
+        onSaveResumeNote={onSaveResumeNote}
+        onClearResumeNote={onClearResumeNote}
+        onGenerateResumeNote={onGenerateResumeNote}
         onClose={() => onCloseSession(sessions[0].id)}
       />
     );
@@ -73,6 +84,9 @@ export function SessionSplitView({
         session={sessions[0]}
         onSaveTitle={onSaveTitle}
         onResetTitle={onResetTitle}
+        onSaveResumeNote={onSaveResumeNote}
+        onClearResumeNote={onClearResumeNote}
+        onGenerateResumeNote={onGenerateResumeNote}
         onClose={() => onCloseSession(sessions[0].id)}
       />
       <SessionPanel
@@ -80,6 +94,9 @@ export function SessionSplitView({
         session={sessions[1]}
         onSaveTitle={onSaveTitle}
         onResetTitle={onResetTitle}
+        onSaveResumeNote={onSaveResumeNote}
+        onClearResumeNote={onClearResumeNote}
+        onGenerateResumeNote={onGenerateResumeNote}
         onClose={() => onCloseSession(sessions[1].id)}
       />
     </SimpleGrid>
@@ -91,18 +108,26 @@ function SessionPanel({
   session,
   onSaveTitle,
   onResetTitle,
+  onSaveResumeNote,
+  onClearResumeNote,
+  onGenerateResumeNote,
   onClose,
 }: {
   preferredTerminal: PreferredTerminal;
   session: SessionSummary;
   onSaveTitle: (sessionId: string, title: string) => void;
   onResetTitle: (sessionId: string) => void;
+  onSaveResumeNote: (sessionId: string, note: string, source?: SessionResumeNoteSource) => void;
+  onClearResumeNote: (sessionId: string) => void;
+  onGenerateResumeNote: (sessionId: string) => void;
   onClose: () => void;
 }) {
   const [resumeError, setResumeError] = useState<string | null>(null);
   const [isResuming, setIsResuming] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(session.title);
+  const [isEditingResumeNote, setIsEditingResumeNote] = useState(false);
+  const [resumeNoteDraft, setResumeNoteDraft] = useState(session.resumeNote ?? '');
   const conversationViewportRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -117,7 +142,9 @@ function SessionPanel({
   useEffect(() => {
     setIsEditingTitle(false);
     setTitleDraft(session.title);
-  }, [session.id, session.title]);
+    setIsEditingResumeNote(false);
+    setResumeNoteDraft(session.resumeNote ?? '');
+  }, [session.id, session.resumeNote, session.title]);
 
   const handleResume = async () => {
     setResumeError(null);
@@ -146,6 +173,21 @@ function SessionPanel({
   const handleCancelTitleEdit = () => {
     setTitleDraft(session.title);
     setIsEditingTitle(false);
+  };
+
+  const handleGenerateResumeNote = () => {
+    onGenerateResumeNote(session.id);
+    setIsEditingResumeNote(false);
+  };
+
+  const handleSaveResumeNote = () => {
+    onSaveResumeNote(session.id, resumeNoteDraft, 'edited');
+    setIsEditingResumeNote(false);
+  };
+
+  const handleCancelResumeNoteEdit = () => {
+    setResumeNoteDraft(session.resumeNote ?? '');
+    setIsEditingResumeNote(false);
   };
 
   return (
@@ -262,6 +304,95 @@ function SessionPanel({
 
         <Divider />
 
+        <Card withBorder radius="lg" padding="md" className="resume-note-shell">
+          <Stack gap="sm">
+            <Group justify="space-between" align="flex-start">
+              <Group gap="xs" align="center">
+                <Text fw={600}>Resume note</Text>
+                {session.resumeNoteUpdatedAt ? (
+                  <Text size="xs" c="dimmed">
+                    Updated {formatDate(session.resumeNoteUpdatedAt)}
+                  </Text>
+                ) : null}
+              </Group>
+
+              <Group gap="xs">
+                <Button
+                  variant="light"
+                  size="compact-sm"
+                  onClick={handleGenerateResumeNote}
+                >
+                  {session.resumeNote ? 'Regenerate draft' : 'Generate draft'}
+                </Button>
+                {session.resumeNote && !isEditingResumeNote ? (
+                  <Button
+                    variant="default"
+                    size="compact-sm"
+                    onClick={() => setIsEditingResumeNote(true)}
+                  >
+                    Edit note
+                  </Button>
+                ) : null}
+                {session.resumeNote ? (
+                  <Button
+                    variant="subtle"
+                    color="gray"
+                    size="compact-sm"
+                    onClick={() => onClearResumeNote(session.id)}
+                  >
+                    Clear
+                  </Button>
+                ) : null}
+              </Group>
+            </Group>
+
+            {session.resumeNoteSource === 'generated' ? (
+              <Group gap="xs">
+                <Badge
+                  size="sm"
+                  variant="light"
+                  color="cyan"
+                >
+                  Draft
+                </Badge>
+              </Group>
+            ) : null}
+
+            {isEditingResumeNote ? (
+              <Stack gap="xs">
+                <Textarea
+                  value={resumeNoteDraft}
+                  onChange={(event) => setResumeNoteDraft(event.currentTarget.value)}
+                  autosize
+                  minRows={4}
+                  maxRows={10}
+                  placeholder="What is this session about, where are you, and what should happen next?"
+                />
+                <Group gap="xs">
+                  <Button size="xs" onClick={handleSaveResumeNote}>
+                    Save note
+                  </Button>
+                  <Button variant="default" size="xs" onClick={handleCancelResumeNoteEdit}>
+                    Cancel
+                  </Button>
+                </Group>
+              </Stack>
+            ) : session.resumeNote ? (
+              <>
+                <ScrollAreaAutosize mah={180} offsetScrollbars className="resume-note-content">
+                  <StructuredResumeNote note={session.resumeNote} />
+                </ScrollAreaAutosize>
+              </>
+            ) : (
+              <Text size="sm" c="dimmed">
+                No resume note yet. Generate a draft or write one yourself.
+              </Text>
+            )}
+          </Stack>
+        </Card>
+
+        <Divider />
+
         <Stack gap="xs" style={{flex: 1, minHeight: 0}}>
           <Card withBorder radius="lg" padding="md" className="conversation-shell" style={{flex: 1, minHeight: 0}}>
             <ScrollArea
@@ -302,6 +433,61 @@ function SessionPanel({
       </Stack>
     </Card>
   );
+}
+
+function StructuredResumeNote({note}: {note: string}) {
+  const sections = parseResumeNote(note);
+
+  if (sections.length === 0) {
+    return (
+      <Text size="sm" style={{whiteSpace: 'pre-wrap'}}>
+        {note}
+      </Text>
+    );
+  }
+
+  return (
+    <Stack gap="sm">
+      {sections.map((section) => (
+        <Stack key={section.heading} gap={6} className="resume-note-row">
+          <Group gap="xs">
+            <Badge size="sm" variant="light" color="gray" className="resume-note-heading-badge">
+              {section.heading}
+            </Badge>
+          </Group>
+          <Text size="sm" className="resume-note-body">
+            {section.body}
+          </Text>
+        </Stack>
+      ))}
+    </Stack>
+  );
+}
+
+function parseResumeNote(note: string) {
+  return note
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .flatMap((line) => {
+      const separatorIndex = line.indexOf(':');
+
+      if (separatorIndex === -1) {
+        return [];
+      }
+
+      const heading = line.slice(0, separatorIndex).trim();
+      const body = line.slice(separatorIndex + 1).trim();
+
+      if (!heading || !body) {
+        return [];
+      }
+
+      return [{
+        heading,
+        body,
+      }];
+    });
 }
 
 function EmptyState({

@@ -14,12 +14,17 @@ export interface SessionSearchMatch {
   score: number;
 }
 
+export type SessionResumeNoteSource = 'generated' | 'edited';
+
 export interface SessionSummary {
   id: string;
   title: string;
   sourceTitle?: string;
   hasCustomTitle?: boolean;
   searchMatch?: SessionSearchMatch;
+  resumeNote?: string;
+  resumeNoteSource?: SessionResumeNoteSource;
+  resumeNoteUpdatedAt?: string;
   workspaceLabel: string;
   workspacePath: string;
   status: SessionStatus;

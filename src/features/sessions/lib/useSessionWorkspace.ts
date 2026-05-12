@@ -1,10 +1,12 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
 import type {
   SessionSortOption,
+  SessionResumeNoteSource,
   SessionSummary,
 } from '@/features/sessions/types/session';
 import {mockSessions} from './mockSessions';
 import {rankSessionsByQuery} from './searchRanking';
+import {generateResumeNoteDraft} from './resumeNoteDraft';
 import {loadSessions} from './sessionSource';
 
 const FAVORITES_KEY = 'co-pivot-favorite-session-ids';
@@ -12,7 +14,14 @@ const FAVORITES_ONLY_KEY = 'co-pivot-favorites-only';
 const SORT_KEY = 'co-pivot-session-sort';
 const SEARCH_QUERY_KEY = 'co-pivot-session-search-query';
 const TITLE_OVERRIDES_KEY = 'co-pivot-session-title-overrides';
+const RESUME_NOTES_KEY = 'co-pivot-session-resume-notes';
 const AUTO_REFRESH_INTERVAL_MS = 30_000;
+
+interface ResumeNoteEntry {
+  note: string;
+  source: SessionResumeNoteSource;
+  updatedAt: string;
+}
 
 export function useSessionWorkspace() {
   const [baseSessions, setBaseSessions] = useState<SessionSummary[]>(mockSessions);
@@ -27,6 +36,7 @@ export function useSessionWorkspace() {
   const [sortOption, setSortOptionState] = useState<SessionSortOption>(() => readSortOption());
   const [searchQuery, setSearchQueryState] = useState<string>(() => readSearchQuery());
   const [titleOverrides, setTitleOverridesState] = useState<Record<string, string>>(() => readTitleOverrides());
+  const [resumeNotes, setResumeNotesState] = useState<Record<string, ResumeNoteEntry>>(() => readResumeNotes());
   const refreshInFlightRef = useRef(false);
 
   const refresh = async ({silent = false}: {silent?: boolean} = {}) => {
@@ -85,7 +95,8 @@ export function useSessionWorkspace() {
 
   const sessions = useMemo(() => {
     const sessionsWithTitles = baseSessions.map((session) => applyTitleOverride(session, titleOverrides));
-    const sorted = [...sessionsWithTitles].sort((left, right) => compareSessions(left, right, sortOption));
+    const sessionsWithLocalMetadata = sessionsWithTitles.map((session) => applyResumeNote(session, resumeNotes));
+    const sorted = [...sessionsWithLocalMetadata].sort((left, right) => compareSessions(left, right, sortOption));
     const favoriteSet = new Set(favoriteIds);
     const nonEmptySessions = sorted.filter((session) => session.messageCount > 0);
     const filteredByFavorites = favoritesOnly
@@ -93,7 +104,7 @@ export function useSessionWorkspace() {
       : nonEmptySessions;
 
     return rankSessionsByQuery(filteredByFavorites, searchQuery);
-  }, [baseSessions, favoriteIds, favoritesOnly, searchQuery, sortOption, titleOverrides]);
+  }, [baseSessions, favoriteIds, favoritesOnly, resumeNotes, searchQuery, sortOption, titleOverrides]);
 
   const toggleFavorite = (sessionId: string) => {
     setFavoriteIds((current) => {
@@ -137,6 +148,51 @@ export function useSessionWorkspace() {
     });
   };
 
+  const saveResumeNote = (
+    sessionId: string,
+    note: string,
+    source: SessionResumeNoteSource = 'edited',
+  ) => {
+    setResumeNotesState((current) => {
+      const next = {...current};
+      const normalized = note.trim();
+
+      if (!normalized) {
+        delete next[sessionId];
+      } else {
+        next[sessionId] = {
+          note: normalized,
+          source,
+          updatedAt: new Date().toISOString(),
+        };
+      }
+
+      localStorage.setItem(RESUME_NOTES_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const clearResumeNote = (sessionId: string) => {
+    setResumeNotesState((current) => {
+      const next = {...current};
+      delete next[sessionId];
+      localStorage.setItem(RESUME_NOTES_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const generateResumeNote = (sessionId: string) => {
+    const session = baseSessions
+      .map((item) => applyTitleOverride(item, titleOverrides))
+      .find((item) => item.id === sessionId);
+
+    if (!session) {
+      return;
+    }
+
+    saveResumeNote(sessionId, generateResumeNoteDraft(session), 'generated');
+  };
+
   return {
     sessions,
     mode,
@@ -154,6 +210,9 @@ export function useSessionWorkspace() {
     setSearchQuery,
     setCustomTitle,
     resetCustomTitle,
+    saveResumeNote,
+    clearResumeNote,
+    generateResumeNote,
   };
 }
 
@@ -211,6 +270,40 @@ function readTitleOverrides() {
   }
 }
 
+function readResumeNotes() {
+  try {
+    const raw = localStorage.getItem(RESUME_NOTES_KEY);
+    if (!raw) {
+      return {};
+    }
+
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {};
+    }
+
+    return Object.fromEntries(
+      Object.entries(parsed).flatMap(([key, value]) => {
+        if (
+          typeof key !== 'string' ||
+          !value ||
+          typeof value !== 'object' ||
+          Array.isArray(value) ||
+          typeof (value as ResumeNoteEntry).note !== 'string' ||
+          typeof (value as ResumeNoteEntry).updatedAt !== 'string' ||
+          !['generated', 'edited'].includes(String((value as ResumeNoteEntry).source))
+        ) {
+          return [];
+        }
+
+        return [[key, value as ResumeNoteEntry]];
+      }),
+    );
+  } catch {
+    return {};
+  }
+}
+
 function compareSessions(
   left: SessionSummary,
   right: SessionSummary,
@@ -249,6 +342,29 @@ function applyTitleOverride(
     title: override,
     sourceTitle: session.title,
     hasCustomTitle: true,
+  };
+}
+
+function applyResumeNote(
+  session: SessionSummary,
+  resumeNotes: Record<string, ResumeNoteEntry>,
+): SessionSummary {
+  const entry = resumeNotes[session.id];
+
+  if (!entry?.note.trim()) {
+    return {
+      ...session,
+      resumeNote: undefined,
+      resumeNoteSource: undefined,
+      resumeNoteUpdatedAt: undefined,
+    };
+  }
+
+  return {
+    ...session,
+    resumeNote: entry.note,
+    resumeNoteSource: entry.source,
+    resumeNoteUpdatedAt: entry.updatedAt,
   };
 }
 

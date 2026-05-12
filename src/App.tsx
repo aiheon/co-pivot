@@ -53,6 +53,9 @@ export default function App() {
     setSearchQuery,
     setCustomTitle,
     resetCustomTitle,
+    saveResumeNote,
+    clearResumeNote,
+    generateResumeNote,
   } = useSessionWorkspace();
   const [splitView, setSplitView] = useState(true);
   const [preferredTerminal, setPreferredTerminalState] = useState<PreferredTerminal>('iterm');
@@ -209,6 +212,9 @@ export default function App() {
               splitView={splitView}
               onSaveTitle={setCustomTitle}
               onResetTitle={resetCustomTitle}
+              onSaveResumeNote={saveResumeNote}
+              onClearResumeNote={clearResumeNote}
+              onGenerateResumeNote={generateResumeNote}
               onCloseSession={(id) => setActiveIds((current) => current.filter((activeId) => activeId !== id))}
             />
           </Box>
