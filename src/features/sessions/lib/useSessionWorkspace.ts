@@ -16,7 +16,6 @@ const SORT_KEY = 'co-pivot-session-sort';
 const SEARCH_QUERY_KEY = 'co-pivot-session-search-query';
 const TITLE_OVERRIDES_KEY = 'co-pivot-session-title-overrides';
 const RESUME_NOTES_KEY = 'co-pivot-session-resume-notes';
-const AUTO_REFRESH_INTERVAL_MS = 30_000;
 
 interface ResumeNoteEntry {
   note: string;
@@ -66,33 +65,6 @@ export function useSessionWorkspace() {
 
   useEffect(() => {
     void refresh();
-  }, []);
-
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        void refresh({silent: true});
-      }
-    }, AUTO_REFRESH_INTERVAL_MS);
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        void refresh({silent: true});
-      }
-    };
-
-    const handleWindowFocus = () => {
-      void refresh({silent: true});
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleWindowFocus);
-
-    return () => {
-      window.clearInterval(intervalId);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleWindowFocus);
-    };
   }, []);
 
   useEffect(() => {
